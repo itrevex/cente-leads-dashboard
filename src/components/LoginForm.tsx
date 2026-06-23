@@ -2,6 +2,12 @@ import { useState, type FormEvent } from 'react';
 
 type Step = { kind: 'credentials' } | { kind: 'otp'; sessionToken: string };
 
+const inputClass =
+  'w-full rounded-sm border border-ink-200 px-3 py-2 text-sm text-ink-700 outline-none focus:border-cente-blue-600 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100';
+const labelClass = 'mb-1 block text-sm font-medium text-ink-600 dark:text-ink-300';
+const submitClass =
+  'w-full rounded-pill bg-cente-blue-600 py-3 font-medium text-white transition hover:bg-cente-red-600 disabled:cursor-not-allowed disabled:opacity-60';
+
 export default function LoginForm() {
   const [step, setStep] = useState<Step>({ kind: 'credentials' });
   const [phone, setPhone] = useState('');
@@ -59,11 +65,15 @@ export default function LoginForm() {
 
   if (step.kind === 'otp') {
     return (
-      <form onSubmit={handleOtpSubmit}>
-        <h1>Enter verification code</h1>
-        {error && <p className="auth-error">{error}</p>}
-        <div className="field">
-          <label htmlFor="code">6-digit code</label>
+      <form onSubmit={handleOtpSubmit} className="flex flex-col gap-4">
+        <h1 className="mb-2 text-xl font-semibold text-cente-blue-600 dark:text-cente-blue-300">
+          Enter verification code
+        </h1>
+        {error && <p className="text-sm text-cente-red-500">{error}</p>}
+        <div>
+          <label htmlFor="code" className={labelClass}>
+            6-digit code
+          </label>
           <input
             id="code"
             inputMode="numeric"
@@ -71,9 +81,10 @@ export default function LoginForm() {
             value={code}
             onChange={(event) => setCode(event.target.value)}
             required
+            className={inputClass}
           />
         </div>
-        <button type="submit" className="auth-submit" disabled={submitting}>
+        <button type="submit" className={submitClass} disabled={submitting}>
           {submitting ? 'Verifying…' : 'Verify'}
         </button>
       </form>
@@ -81,30 +92,38 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleCredentialsSubmit}>
-      <h1>Sign in to Cente Leads</h1>
-      {error && <p className="auth-error">{error}</p>}
-      <div className="field">
-        <label htmlFor="phone">Phone</label>
+    <form onSubmit={handleCredentialsSubmit} className="flex flex-col gap-4">
+      <h1 className="mb-2 text-xl font-semibold text-cente-blue-600 dark:text-cente-blue-300">
+        Sign in to Cente Leads
+      </h1>
+      {error && <p className="text-sm text-cente-red-500">{error}</p>}
+      <div>
+        <label htmlFor="phone" className={labelClass}>
+          Phone
+        </label>
         <input
           id="phone"
           type="tel"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
           required
+          className={inputClass}
         />
       </div>
-      <div className="field">
-        <label htmlFor="password">Password</label>
+      <div>
+        <label htmlFor="password" className={labelClass}>
+          Password
+        </label>
         <input
           id="password"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           required
+          className={inputClass}
         />
       </div>
-      <button type="submit" className="auth-submit" disabled={submitting}>
+      <button type="submit" className={submitClass} disabled={submitting}>
         {submitting ? 'Signing in…' : 'Sign in'}
       </button>
     </form>

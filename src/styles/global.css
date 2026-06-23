@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700;900&display=swap');
+@import 'tailwindcss';
+
+/* Dark mode toggled by adding `.dark` to <html> (see ThemeScript). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Cente Blue */
+  --color-cente-blue-50: #f1f4f8;
+  --color-cente-blue-100: #e1eeff;
+  --color-cente-blue-200: #c4d6f4;
+  --color-cente-blue-300: #93b6ec;
+  --color-cente-blue-400: #5b94e0;
+  --color-cente-blue-500: #2a73d4;
+  --color-cente-blue-600: #0055c6;
+  --color-cente-blue-700: #004fb3;
+  --color-cente-blue-800: #003d8e;
+  --color-cente-blue-900: #002a63;
+
+  /* Cente Yellow */
+  --color-cente-yellow-100: #fff8c2;
+  --color-cente-yellow-300: #fff099;
+  --color-cente-yellow-500: #ffe83a;
+  --color-cente-yellow-600: #ffe200;
+  --color-cente-yellow-700: #c9b300;
+
+  /* Cente Red */
+  --color-cente-red-100: #fde2e0;
+  --color-cente-red-500: #f0453a;
+  --color-cente-red-600: #ec2727;
+  --color-cente-red-700: #c9251a;
+
+  /* Ink (neutrals) */
+  --color-ink-50: #f4f4f4;
+  --color-ink-100: #eaeaeb;
+  --color-ink-200: #d1d1d7;
+  --color-ink-300: #b6b6bf;
+  --color-ink-400: #8d8d9b;
+  --color-ink-500: #707070;
+  --color-ink-600: #565660;
+  --color-ink-700: #37373f;
+  --color-ink-800: #25252b;
+  --color-ink-900: #18181d;
+
+  --color-success: #059652;
+  --color-success-soft: #e0f3e8;
+  --color-copyright-bg: #19374e;
+
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 50px;
+
+  --shadow-xs: 0 1px 2px rgba(55, 55, 63, 0.06);
+  --shadow-sm: 0 0 30px rgba(55, 55, 63, 0.08);
+  --shadow-md: 0 2px 25px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 0 30px rgba(0, 0, 0, 0.08);
+  --shadow-dropdown: 0 0 30px rgba(127, 137, 161, 0.25);
+  --shadow-brand: 0 8px 28px rgba(0, 85, 198, 0.25);
+}
+
+@layer base {
+  html,
+  body {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    @apply bg-white text-ink-500 dark:bg-ink-900 dark:text-ink-200;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-sans text-cente-blue-600 dark:text-cente-blue-300;
+  }
+}

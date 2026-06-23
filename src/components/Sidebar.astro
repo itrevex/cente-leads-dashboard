@@ -1,38 +1,62 @@
 ---
 import { navForRole } from '../lib/nav';
 import type { DashboardRole } from '../lib/types';
+import SidebarNav from './SidebarNav';
 
 interface Props {
   role: DashboardRole;
+  userName: string;
 }
 
-const { role } = Astro.props;
+const { role, userName } = Astro.props;
 const sections = navForRole(role);
 const currentPath = Astro.url.pathname;
+const initials = userName
+  .split(' ')
+  .map((part) => part[0])
+  .slice(0, 2)
+  .join('')
+  .toUpperCase();
 ---
 
-<aside class="sidebar">
-  <div class="sidebar-brand">Cente Leads</div>
-  <nav>
-    {
-      sections.map((section) => (
-        <div class="nav-section">
-          <p class="nav-section-label">{section.label}</p>
-          <ul>
-            {section.items.map((item) => (
-              <li>
-                <a href={item.href} aria-current={currentPath === item.href ? 'page' : undefined}>
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))
-    }
-  </nav>
-  <form method="post" action="/api/auth/logout" id="logout-form">
-    <button type="submit" class="logout-button">Log out</button>
+<aside class="flex h-full flex-col bg-white dark:bg-ink-800">
+  <div class="flex h-16 shrink-0 items-center border-b border-ink-100 px-5 dark:border-ink-700">
+    <img src="/centenary-bank-logo-wide.png" alt="Centenary Bank" class="h-9 w-auto" />
+  </div>
+
+  <div class="px-5 py-3">
+    <strong
+      class="block text-[15px] font-bold leading-tight text-cente-blue-600 dark:text-cente-blue-300"
+    >
+      Cente Leads
+    </strong>
+    <span class="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-400"
+      >Operations Dashboard</span
+    >
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-3 py-2">
+    <SidebarNav sections={sections} currentPath={currentPath} client:load />
+  </div>
+
+  <div class="flex items-center gap-2.5 border-t border-ink-100 px-4 py-4 dark:border-ink-700">
+    <span
+      class="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-cente-blue-600 text-xs font-bold text-white"
+    >
+      {initials}
+    </span>
+    <div class="min-w-0 flex-1 leading-tight">
+      <p class="truncate text-[13px] font-semibold text-ink-700 dark:text-ink-50">{userName}</p>
+      <p class="truncate text-[11.5px] text-ink-400">{role.replace('_', ' ')}</p>
+    </div>
+  </div>
+  <form method="post" action="/api/auth/logout" id="logout-form" class="px-4 pb-4">
+    <button
+      type="submit"
+      class="w-full rounded-pill border border-ink-200 px-4 py-2 text-sm text-ink-600 transition hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
+    >
+      Log out
+    </button>
   </form>
 </aside>
 

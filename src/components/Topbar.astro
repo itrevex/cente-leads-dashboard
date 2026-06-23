@@ -1,0 +1,53 @@
+---
+import { Search, Building2, Bell, HelpCircle } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
+
+interface Props {
+  title: string;
+  branchLabel?: string;
+}
+
+const { title, branchLabel = 'Head Office · All branches' } = Astro.props;
+---
+
+<header
+  class="flex h-16 items-center gap-3 border-b border-ink-100 bg-white px-6 dark:border-ink-800 dark:bg-ink-900"
+>
+  <strong class="text-sm text-ink-700 dark:text-ink-100">{title}</strong>
+
+  <div class="relative ml-auto w-full max-w-[340px]">
+    <Search
+      size={16}
+      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
+    />
+    <input
+      type="search"
+      placeholder="Search leads, NIN, agent name, cooperative…"
+      class="h-9 w-full rounded-sm border border-ink-200 bg-white pl-9 pr-3 text-sm text-ink-700 outline-none placeholder:text-ink-400 focus:border-cente-blue-600 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-100"
+    />
+  </div>
+
+  <button
+    class="flex items-center gap-2 rounded-pill border border-ink-200 px-3 py-2 text-sm text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-100 dark:hover:bg-ink-800"
+  >
+    <Building2 size={16} />
+    {branchLabel}
+  </button>
+
+  <button
+    title="Notifications"
+    class="relative flex h-9 w-9 items-center justify-center rounded-sm border border-ink-200 text-ink-500 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
+  >
+    <Bell size={18} />
+    <span class="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cente-red-600"></span>
+  </button>
+
+  <ThemeToggle client:load />
+
+  <button
+    title="Help"
+    class="flex h-9 w-9 items-center justify-center rounded-sm border border-ink-200 text-ink-500 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
+  >
+    <HelpCircle size={18} />
+  </button>
+</header>

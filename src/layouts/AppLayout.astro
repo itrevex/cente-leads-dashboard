@@ -1,7 +1,8 @@
 ---
-import '../styles/tokens.css';
-import '../styles/app.css';
+import '../styles/global.css';
 import Sidebar from '../components/Sidebar.astro';
+import Topbar from '../components/Topbar.astro';
+import ThemeScript from '../components/ThemeScript.astro';
 
 interface Props {
   title: string;
@@ -17,13 +18,19 @@ const { user } = Astro.locals;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>{title} · Cente Leads</title>
+    <ThemeScript />
   </head>
   <body>
-    <div class="app-shell">
-      <Sidebar role={user.role} />
-      <main class="app-main">
-        <slot />
-      </main>
+    <div class="grid min-h-screen grid-cols-[260px_1fr]">
+      <div class="sticky top-0 h-screen">
+        <Sidebar role={user.role} userName={user.full_name} />
+      </div>
+      <div class="flex min-w-0 flex-col">
+        <Topbar title={title} />
+        <main class="flex-1 bg-ink-50/40 p-8 dark:bg-ink-900">
+          <slot />
+        </main>
+      </div>
     </div>
   </body>
 </html>

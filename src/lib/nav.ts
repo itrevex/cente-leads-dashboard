@@ -4,6 +4,7 @@ export interface NavItem {
   id: string;
   label: string;
   href: string;
+  icon: string;
 }
 
 export interface NavSection {
@@ -12,22 +13,22 @@ export interface NavSection {
 }
 
 const WORKSPACE: NavItem[] = [
-  { id: 'overview', label: 'Overview', href: '/' },
-  { id: 'leads', label: 'Leads', href: '/leads' },
-  { id: 'queue-mine', label: 'My Leads', href: '/leads/mine' },
+  { id: 'overview', label: 'Overview', href: '/', icon: 'layout-dashboard' },
+  { id: 'leads', label: 'Leads', href: '/leads', icon: 'inbox' },
+  { id: 'queue-mine', label: 'My Leads', href: '/leads/mine', icon: 'user-check' },
 ];
 
 const CONFIGURATION: NavItem[] = [
-  { id: 'products', label: 'Loan Products', href: '/products' },
-  { id: 'users', label: 'Users & Roles', href: '/users' },
-  { id: 'branches', label: 'Branch Network', href: '/branches' },
-  { id: 'agents', label: 'Agents', href: '/agents' },
-  { id: 'cooperatives', label: 'Cooperatives', href: '/cooperatives' },
+  { id: 'products', label: 'Loan Products', href: '/products', icon: 'package' },
+  { id: 'users', label: 'Users & Roles', href: '/users', icon: 'users-round' },
+  { id: 'branches', label: 'Branch Network', href: '/branches', icon: 'building-2' },
+  { id: 'agents', label: 'Agents', href: '/agents', icon: 'user-round-check' },
+  { id: 'cooperatives', label: 'Cooperatives', href: '/cooperatives', icon: 'landmark' },
 ];
 
 const INSIGHTS: NavItem[] = [
-  { id: 'reports', label: 'Reports', href: '/reports' },
-  { id: 'audit', label: 'Audit Log', href: '/audit' },
+  { id: 'reports', label: 'Reports', href: '/reports', icon: 'bar-chart-3' },
+  { id: 'audit', label: 'Audit Log', href: '/audit', icon: 'file-search' },
 ];
 
 // Per ADR-0009's role/permission model — mirrors what each role can already
