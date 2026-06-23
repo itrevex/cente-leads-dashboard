@@ -1,4 +1,4 @@
-import type { DashboardRole } from './types';
+import type { DashboardRole } from '../shared/types';
 
 export interface NavItem {
   id: string;

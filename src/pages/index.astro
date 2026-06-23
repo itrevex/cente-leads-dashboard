@@ -1,27 +1,5 @@
 ---
-import AppLayout from '../layouts/AppLayout.astro';
-import OverviewDashboard from '../components/overview/OverviewDashboard';
-import { getOverviewReport } from '../lib/api';
-
-const report = await getOverviewReport(Astro.locals.accessToken);
-const { user } = Astro.locals;
-
-const firstName = user.full_name.split(' ')[0];
-const scopeLabel = user.branch ? 'Branch oversight' : 'Head Office oversight — all branches';
-const today = new Date().toLocaleDateString('en-GB', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
+import OverviewPage from '../domains/overview/pages/OverviewPage.astro';
 ---
 
-<AppLayout title="Overview">
-  <OverviewDashboard
-    report={report}
-    firstName={firstName}
-    scopeLabel={scopeLabel}
-    today={today}
-    client:load
-  />
-</AppLayout>
+<OverviewPage />

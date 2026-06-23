@@ -7,15 +7,9 @@ import {
   ArrowRight,
   TrendingUp,
 } from 'lucide-react';
-import type { OverviewReport } from '../../lib/types';
-import {
-  RECENT_LEADS,
-  TREND_12W,
-  STAGE_MIX,
-  STATUS_META,
-  formatUgx,
-} from '../../lib/mock-overview';
-import { STAGE_ICONS } from '../../lib/icons';
+import type { OverviewReport } from '../types';
+import { RECENT_LEADS, TREND_12W, STAGE_MIX, STATUS_META, formatUgx } from '../mock-data';
+import { STAGE_ICONS } from '../../../shell/icons';
 import KpiCard from './KpiCard';
 import Badge from './Badge';
 import Avatar from './Avatar';

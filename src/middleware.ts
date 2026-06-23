@@ -1,7 +1,8 @@
 import { defineMiddleware } from 'astro:middleware';
-import { getCurrentUser, refreshAccessToken, ApiError } from './lib/api';
-import { readSession, writeSession, clearSession } from './lib/session';
-import { isExpiringSoon } from './lib/jwt';
+import { getCurrentUser, refreshAccessToken } from './domains/auth/api';
+import { readSession, writeSession, clearSession } from './domains/auth/session';
+import { isExpiringSoon } from './domains/auth/jwt';
+import { ApiError } from './shared/api-client';
 
 const PUBLIC_PATHS = new Set(['/login', '/login/verify']);
 

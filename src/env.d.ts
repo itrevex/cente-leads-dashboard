@@ -1,6 +1,6 @@
 /// <reference types="astro/client" />
 
-import type { CurrentUser } from './lib/types';
+import type { CurrentUser } from './shared/types';
 
 declare global {
   namespace App {

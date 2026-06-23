@@ -1,0 +1,22 @@
+---
+import '../../../shared/global.css';
+import LoginForm from '../components/LoginForm';
+import ThemeScript from '../../../shell/ThemeScript.astro';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Sign in · Cente Leads</title>
+    <ThemeScript />
+  </head>
+  <body>
+    <div class="flex min-h-screen items-center justify-center bg-ink-50 dark:bg-ink-900">
+      <div class="w-[360px] rounded-lg bg-white p-10 shadow-lg dark:bg-ink-800">
+        <LoginForm client:load />
+      </div>
+    </div>
+  </body>
+</html>

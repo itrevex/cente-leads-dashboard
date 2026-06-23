@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
-import { login, ApiError } from '../../../lib/api';
-import { writeSession } from '../../../lib/session';
-import { isOtpSessionResponse } from '../../../lib/types';
+import { login } from '../../../domains/auth/api';
+import { writeSession } from '../../../domains/auth/session';
+import { isOtpSessionResponse } from '../../../domains/auth/types';
+import { ApiError } from '../../../shared/api-client';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   const { phone, password } = await request.json();

@@ -1,5 +1,5 @@
-import type { NavSection } from '../lib/nav';
-import { NAV_ICONS } from '../lib/icons';
+import type { NavSection } from './nav';
+import { NAV_ICONS } from './icons';
 
 interface Props {
   sections: NavSection[];
