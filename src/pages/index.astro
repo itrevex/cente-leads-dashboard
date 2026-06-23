@@ -1,0 +1,77 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import { getOverviewReport } from '../lib/api';
+
+const report = await getOverviewReport(Astro.locals.accessToken);
+---
+
+<AppLayout title="Overview">
+  <h1>Overview</h1>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <p class="kpi-value">{report.total_in_pipeline}</p>
+      <p class="kpi-label">Total in pipeline</p>
+    </div>
+    <div class="kpi-card">
+      <p class="kpi-value">{report.bank_reviewing}</p>
+      <p class="kpi-label">Bank reviewing</p>
+    </div>
+    <div class="kpi-card">
+      <p class="kpi-value">{report.stuck_at_chair_approval}</p>
+      <p class="kpi-label">Stuck at chair approval</p>
+    </div>
+    <div class="kpi-card">
+      <p class="kpi-value">{report.returned_to_agent}</p>
+      <p class="kpi-label">Returned to agent</p>
+    </div>
+  </div>
+
+  <h2>By status</h2>
+  <ul class="status-list">
+    {
+      Object.entries(report.by_status).map(([statusKey, count]) => (
+        <li>
+          <span>{statusKey}</span>
+          <strong>{count}</strong>
+        </li>
+      ))
+    }
+  </ul>
+</AppLayout>
+
+<style>
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+  .kpi-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+  }
+  .kpi-value {
+    font-size: var(--fs-h2);
+    font-weight: var(--fw-h2);
+    color: var(--color-primary);
+    margin: 0;
+  }
+  .kpi-label {
+    color: var(--fg-2);
+    margin: var(--space-1) 0 0;
+  }
+
+  .status-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-width: 320px;
+  }
+  .status-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+</style>

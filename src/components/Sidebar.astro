@@ -1,0 +1,46 @@
+---
+import { navForRole } from '../lib/nav';
+import type { DashboardRole } from '../lib/types';
+
+interface Props {
+  role: DashboardRole;
+}
+
+const { role } = Astro.props;
+const sections = navForRole(role);
+const currentPath = Astro.url.pathname;
+---
+
+<aside class="sidebar">
+  <div class="sidebar-brand">Cente Leads</div>
+  <nav>
+    {
+      sections.map((section) => (
+        <div class="nav-section">
+          <p class="nav-section-label">{section.label}</p>
+          <ul>
+            {section.items.map((item) => (
+              <li>
+                <a href={item.href} aria-current={currentPath === item.href ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </nav>
+  <form method="post" action="/api/auth/logout" id="logout-form">
+    <button type="submit" class="logout-button">Log out</button>
+  </form>
+</aside>
+
+<script>
+  const form = document.getElementById('logout-form');
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  });
+</script>

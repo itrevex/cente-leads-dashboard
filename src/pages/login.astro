@@ -1,0 +1,21 @@
+---
+import '../styles/tokens.css';
+import '../styles/app.css';
+import LoginForm from '../components/LoginForm';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Sign in · Cente Leads</title>
+  </head>
+  <body>
+    <div class="auth-page">
+      <div class="auth-card">
+        <LoginForm client:load />
+      </div>
+    </div>
+  </body>
+</html>
