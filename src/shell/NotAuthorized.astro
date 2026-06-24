@@ -1,0 +1,17 @@
+---
+import { ShieldAlert } from 'lucide-react';
+
+interface Props {
+  message?: string;
+}
+
+const { message = "You don't have permission to view this page." } = Astro.props;
+---
+
+<div
+  class="flex flex-col items-center justify-center gap-3 rounded-md border border-ink-100 bg-white py-20 text-center dark:border-ink-700 dark:bg-ink-800"
+>
+  <ShieldAlert size={28} className="text-ink-400" />
+  <p class="text-sm font-medium text-ink-700 dark:text-ink-50">Not authorized</p>
+  <p class="text-sm text-ink-400">{message}</p>
+</div>

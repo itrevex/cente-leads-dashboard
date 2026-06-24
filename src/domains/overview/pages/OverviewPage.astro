@@ -1,10 +1,24 @@
 ---
 import AppLayout from '../../../shell/AppLayout.astro';
 import OverviewDashboard from '../components/OverviewDashboard';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
 import { getOverviewReport } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { OverviewReport } from '../types';
 
-const report = await getOverviewReport(Astro.locals.accessToken);
 const { user } = Astro.locals;
+
+let report: OverviewReport | null = null;
+let forbidden = false;
+try {
+  report = await getOverviewReport(Astro.locals.accessToken);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else {
+    throw err;
+  }
+}
 
 const firstName = user.full_name.split(' ')[0];
 const scopeLabel = user.branch ? 'Branch oversight' : 'Head Office oversight — all branches';
@@ -17,11 +31,17 @@ const today = new Date().toLocaleDateString('en-GB', {
 ---
 
 <AppLayout title="Overview">
-  <OverviewDashboard
-    report={report}
-    firstName={firstName}
-    scopeLabel={scopeLabel}
-    today={today}
-    client:load
-  />
+  {
+    forbidden || !report ? (
+      <NotAuthorized message="You don't have permission to view reports." />
+    ) : (
+      <OverviewDashboard
+        report={report}
+        firstName={firstName}
+        scopeLabel={scopeLabel}
+        today={today}
+        client:load
+      />
+    )
+  }
 </AppLayout>
