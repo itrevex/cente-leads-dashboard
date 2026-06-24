@@ -1,5 +1,15 @@
-import { request } from '../../shared/api-client';
-import type { LeadFilters, Lead, PaginatedResponse } from './types';
+import { request, ApiError } from '../../shared/api-client';
+import type {
+  LeadFilters,
+  Lead,
+  PaginatedResponse,
+  LoanProduct,
+  LeadFormSchema,
+  ChairApproval,
+  Comment,
+  LeadDocument,
+  AuditEvent,
+} from './types';
 
 interface NamedOption {
   id: string;
@@ -61,4 +71,69 @@ export async function getAgentOptions(accessToken: string): Promise<AgentOption[
     accessToken,
   );
   return page.results;
+}
+
+export function getLead(accessToken: string, id: string): Promise<Lead> {
+  return request<Lead>(`/leads/${id}/`, { method: 'GET' }, accessToken);
+}
+
+export function getLoanProduct(accessToken: string, id: string): Promise<LoanProduct> {
+  return request<LoanProduct>(`/loan-products/${id}/`, { method: 'GET' }, accessToken);
+}
+
+export function getFormSchema(accessToken: string, id: string): Promise<LeadFormSchema> {
+  return request<LeadFormSchema>(`/form-schemas/${id}/`, { method: 'GET' }, accessToken);
+}
+
+export async function getChairApprovals(
+  accessToken: string,
+  leadId: string,
+): Promise<ChairApproval[]> {
+  const page = await request<PaginatedResponse<ChairApproval>>(
+    `/leads/${leadId}/chair-approvals/`,
+    { method: 'GET' },
+    accessToken,
+  );
+  return page.results;
+}
+
+export async function getComments(accessToken: string, leadId: string): Promise<Comment[]> {
+  const page = await request<PaginatedResponse<Comment>>(
+    `/leads/${leadId}/comments/`,
+    { method: 'GET' },
+    accessToken,
+  );
+  return page.results;
+}
+
+export async function getDocuments(accessToken: string, leadId: string): Promise<LeadDocument[]> {
+  const page = await request<PaginatedResponse<LeadDocument>>(
+    `/leads/${leadId}/documents/`,
+    { method: 'GET' },
+    accessToken,
+  );
+  return page.results;
+}
+
+// Gated on view_audit (ADR-0009) — most lead-owning roles (branch
+// officer/manager, loan officer) don't have it, so a 403 here is
+// expected and the caller should just omit the timeline, not treat it
+// as a page-level error.
+export async function getLeadAuditEvents(
+  accessToken: string,
+  leadId: string,
+): Promise<AuditEvent[]> {
+  try {
+    const page = await request<PaginatedResponse<AuditEvent>>(
+      `/audit-events/?entity_type=lead&entity_id=${leadId}&limit=100`,
+      { method: 'GET' },
+      accessToken,
+    );
+    return page.results;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 403) {
+      return [];
+    }
+    throw err;
+  }
 }

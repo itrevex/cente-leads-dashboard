@@ -120,7 +120,7 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
                   <tr
                     key={lead.id}
                     onClick={() => {
-                      window.location.href = `/leads?search=${lead.id}`;
+                      window.location.href = `/leads/${lead.id}`;
                     }}
                     className="cursor-pointer border-t border-ink-100 hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-700/40"
                   >

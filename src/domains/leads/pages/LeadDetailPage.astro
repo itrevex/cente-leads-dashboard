@@ -1,0 +1,413 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import { ApiError } from '../../../shared/api-client';
+import {
+  getLead,
+  getLoanProduct,
+  getFormSchema,
+  getChairApprovals,
+  getComments,
+  getDocuments,
+  getLeadAuditEvents,
+} from '../api';
+import {
+  STATUS_META,
+  formatUgx,
+  initialsOf,
+  AUDIT_ACTION_LABELS,
+  DOC_TYPE_LABELS,
+  UPLOAD_STATUS_META,
+} from '../presentation';
+import Badge from '../../../shared/components/Badge';
+import Avatar from '../../../shared/components/Avatar';
+
+const { id } = Astro.params;
+const accessToken = Astro.locals.accessToken;
+const activeTab = Astro.url.searchParams.get('tab') ?? 'application';
+
+let forbidden = false;
+let notFound = false;
+let lead: Awaited<ReturnType<typeof getLead>> | null = null;
+let product: Awaited<ReturnType<typeof getLoanProduct>> | null = null;
+let formSchema: Awaited<ReturnType<typeof getFormSchema>> | null = null;
+let chairApprovals: Awaited<ReturnType<typeof getChairApprovals>> = [];
+let comments: Awaited<ReturnType<typeof getComments>> = [];
+let documents: Awaited<ReturnType<typeof getDocuments>> = [];
+let auditEvents: Awaited<ReturnType<typeof getLeadAuditEvents>> = [];
+
+try {
+  lead = await getLead(accessToken, id!);
+  [product, formSchema, chairApprovals, comments, documents, auditEvents] = await Promise.all([
+    getLoanProduct(accessToken, lead.loan_product),
+    getFormSchema(accessToken, lead.form_schema),
+    getChairApprovals(accessToken, lead.id),
+    getComments(accessToken, lead.id),
+    getDocuments(accessToken, lead.id),
+    getLeadAuditEvents(accessToken, lead.id),
+  ]);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else if (err instanceof ApiError && err.status === 404) {
+    notFound = true;
+  } else {
+    throw err;
+  }
+}
+
+const fieldLabelByKey = new Map<string, string>();
+if (formSchema) {
+  for (const step of formSchema.steps) {
+    for (const field of step.form_fields) {
+      fieldLabelByKey.set(field.key, field.label);
+    }
+  }
+}
+
+const latestChairApproval = chairApprovals[0] ?? null;
+const internalComments = comments.filter((c) => c.is_internal);
+const externalComments = comments.filter((c) => !c.is_internal);
+
+function tabHref(tab: string): string {
+  return `/leads/${id}?tab=${tab}`;
+}
+
+const statusMeta = lead
+  ? (STATUS_META[lead.status] ?? { label: lead.status, color: 'neutral' })
+  : null;
+---
+
+<AppLayout title="Lead Detail">
+  {
+    forbidden || notFound || !lead || !statusMeta ? (
+      <NotAuthorized
+        message={
+          notFound ? "This lead doesn't exist." : "You don't have permission to view this lead."
+        }
+      />
+    ) : (
+      <div>
+        <a
+          href="/leads"
+          class="mb-3 inline-flex items-center gap-1 text-sm text-ink-500 hover:text-cente-blue-600 dark:text-ink-300"
+        >
+          ← Back to Leads
+        </a>
+
+        <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <Avatar initials={initialsOf(lead.applicant_name)} />
+            <div>
+              <h1 class="text-2xl font-semibold text-ink-700 dark:text-ink-50">
+                {lead.applicant_name}
+              </h1>
+              <div class="mt-1 flex flex-wrap gap-3 text-xs text-ink-400">
+                <span>{lead.id}</span>
+                <span>{lead.applicant_nin}</span>
+                <span>{lead.branch_name}</span>
+                <span>{lead.created_at.slice(0, 10)}</span>
+              </div>
+            </div>
+          </div>
+          <Badge label={statusMeta.label} color={statusMeta.color} />
+        </div>
+
+        <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div class="rounded-md border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
+            <div class="border-b border-ink-100 px-5 py-3 dark:border-ink-700">
+              <h3 class="text-sm font-semibold text-ink-700 dark:text-ink-50">
+                Agent &amp; Source
+              </h3>
+            </div>
+            <dl class="space-y-2 p-5 text-sm">
+              <div class="flex justify-between gap-3">
+                <dt class="text-ink-400">Captured by</dt>
+                <dd class="text-right text-ink-700 dark:text-ink-50">
+                  {lead.assigned_agent_name ?? 'Branch walk-in'}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-ink-400">Source</dt>
+                <dd class="text-right text-ink-700 dark:text-ink-50">{lead.source_label}</dd>
+              </div>
+              {lead.cooperative_name && (
+                <div class="flex justify-between gap-3">
+                  <dt class="text-ink-400">Cooperative</dt>
+                  <dd class="text-right text-ink-700 dark:text-ink-50">{lead.cooperative_name}</dd>
+                </div>
+              )}
+              <div class="flex justify-between gap-3">
+                <dt class="text-ink-400">Captured on</dt>
+                <dd class="text-right text-ink-700 dark:text-ink-50">
+                  {lead.created_at.slice(0, 10)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="rounded-md border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
+            <div class="border-b border-ink-100 px-5 py-3 dark:border-ink-700">
+              <h3 class="text-sm font-semibold text-ink-700 dark:text-ink-50">
+                Chair Approval
+                {latestChairApproval ? ` · ${latestChairApproval.decision}` : ' · Pending'}
+              </h3>
+            </div>
+            <div class="p-5 text-sm">
+              {latestChairApproval ? (
+                <dl class="space-y-2">
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-ink-400">
+                      {latestChairApproval.decision === 'endorsed' ? 'Signed by' : 'Rejected by'}
+                    </dt>
+                    <dd class="text-right text-ink-700 dark:text-ink-50">
+                      {latestChairApproval.chairperson_name}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-ink-400">Signed at</dt>
+                    <dd class="text-right text-ink-700 dark:text-ink-50">
+                      {latestChairApproval.signed_at.slice(0, 16).replace('T', ' ')}
+                    </dd>
+                  </div>
+                  {latestChairApproval.note && (
+                    <div class="flex justify-between gap-3">
+                      <dt class="text-ink-400">Note</dt>
+                      <dd class="text-right text-ink-700 dark:text-ink-50">
+                        "{latestChairApproval.note}"
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              ) : (
+                <p class="text-ink-400">
+                  Waiting for cooperative chairperson to review and sign with their PIN.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div class="rounded-md border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
+            <div class="border-b border-ink-100 px-5 py-3 dark:border-ink-700">
+              <h3 class="text-sm font-semibold text-ink-700 dark:text-ink-50">
+                Lifecycle Timeline
+              </h3>
+            </div>
+            <div class="p-5">
+              {auditEvents.length === 0 ? (
+                <p class="text-sm text-ink-400">No event history available for this lead.</p>
+              ) : (
+                <div class="space-y-2 text-xs">
+                  {auditEvents
+                    .slice()
+                    .reverse()
+                    .map((event) => (
+                      <div class="flex items-center gap-2 text-ink-700 dark:text-ink-50">
+                        <span class="font-semibold text-success">✓</span>
+                        <span class="flex-1">
+                          {AUDIT_ACTION_LABELS[event.action] ?? event.action}
+                        </span>
+                        <span class="text-ink-400">{event.occurred_at.slice(11, 16)}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-md border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
+          <div class="flex gap-1 border-b border-ink-100 px-3 dark:border-ink-700">
+            <a
+              href={tabHref('application')}
+              class={`px-4 py-3 text-sm font-medium ${
+                activeTab === 'application'
+                  ? 'border-b-2 border-cente-blue-600 text-cente-blue-600'
+                  : 'text-ink-500 dark:text-ink-300'
+              }`}
+            >
+              Application
+            </a>
+            <a
+              href={tabHref('documents')}
+              class={`px-4 py-3 text-sm font-medium ${
+                activeTab === 'documents'
+                  ? 'border-b-2 border-cente-blue-600 text-cente-blue-600'
+                  : 'text-ink-500 dark:text-ink-300'
+              }`}
+            >
+              Documents <span class="text-xs text-ink-400">{documents.length}</span>
+            </a>
+            <a
+              href={tabHref('comments')}
+              class={`px-4 py-3 text-sm font-medium ${
+                activeTab === 'comments'
+                  ? 'border-b-2 border-cente-blue-600 text-cente-blue-600'
+                  : 'text-ink-500 dark:text-ink-300'
+              }`}
+            >
+              Comments <span class="text-xs text-ink-400">{comments.length}</span>
+            </a>
+            <a
+              href={tabHref('timeline')}
+              class={`px-4 py-3 text-sm font-medium ${
+                activeTab === 'timeline'
+                  ? 'border-b-2 border-cente-blue-600 text-cente-blue-600'
+                  : 'text-ink-500 dark:text-ink-300'
+              }`}
+            >
+              Timeline
+            </a>
+          </div>
+
+          {activeTab === 'application' && (
+            <div class="grid grid-cols-1 gap-8 p-5 md:grid-cols-2">
+              <div>
+                <h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                  Loan Request
+                </h4>
+                <dl class="space-y-2 text-sm">
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-ink-400">Product</dt>
+                    <dd class="text-right text-ink-700 dark:text-ink-50">
+                      {product ? `${product.name} (${product.code})` : '-'}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-ink-400">Amount</dt>
+                    <dd class="text-right font-semibold text-ink-700 dark:text-ink-50">
+                      {formatUgx(lead.amount_requested)}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-ink-400">Term</dt>
+                    <dd class="text-right text-ink-700 dark:text-ink-50">
+                      {lead.term_months} months
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-ink-400">Interest rate</dt>
+                    <dd class="text-right text-ink-700 dark:text-ink-50">
+                      {product ? `${(product.interest_rate_bps / 100).toFixed(2)}%` : '-'}
+                    </dd>
+                  </div>
+                  {lead.purpose && (
+                    <div class="flex justify-between gap-3">
+                      <dt class="text-ink-400">Purpose</dt>
+                      <dd class="text-right text-ink-700 dark:text-ink-50">{lead.purpose}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+              <div>
+                <h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                  Form Answers
+                </h4>
+                {Object.keys(lead.form_answers).length === 0 ? (
+                  <p class="text-sm text-ink-400">No form answers recorded.</p>
+                ) : (
+                  <dl class="space-y-2 text-sm">
+                    {Object.entries(lead.form_answers).map(([key, value]) => (
+                      <div class="flex justify-between gap-3">
+                        <dt class="text-ink-400">{fieldLabelByKey.get(key) ?? key}</dt>
+                        <dd class="text-right text-ink-700 dark:text-ink-50">{String(value)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'documents' && (
+            <div class="p-5">
+              {documents.length === 0 ? (
+                <p class="text-sm text-ink-400">No documents uploaded yet.</p>
+              ) : (
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {documents.map((doc) => {
+                    const meta = UPLOAD_STATUS_META[doc.upload_status] ?? {
+                      label: doc.upload_status,
+                      color: 'neutral',
+                    };
+                    return (
+                      <div class="flex items-center justify-between gap-3 rounded-sm border border-ink-100 px-4 py-3 dark:border-ink-700">
+                        <div>
+                          <p class="text-sm font-medium text-ink-700 dark:text-ink-50">
+                            {DOC_TYPE_LABELS[doc.doc_type] ?? doc.doc_type}
+                          </p>
+                          <p class="text-xs text-ink-400">
+                            {doc.size_bytes ? `${Math.round(doc.size_bytes / 1024)} KB` : '—'}
+                          </p>
+                        </div>
+                        <Badge label={meta.label} color={meta.color} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'comments' && (
+            <div class="space-y-4 p-5">
+              {comments.length === 0 ? (
+                <p class="text-sm text-ink-400">No comments yet.</p>
+              ) : (
+                comments.map((comment) => (
+                  <div class="flex gap-3">
+                    <Avatar initials={initialsOf(comment.author_name)} />
+                    <div class="flex-1 rounded-sm bg-ink-50 px-4 py-3 dark:bg-ink-900">
+                      <div class="flex items-center justify-between gap-2">
+                        <strong class="text-sm text-ink-700 dark:text-ink-50">
+                          {comment.author_name}
+                        </strong>
+                        <span class="text-xs text-ink-400">
+                          {comment.created_at.slice(0, 16).replace('T', ' ')}
+                          {comment.is_internal && ' · Internal'}
+                        </span>
+                      </div>
+                      <p class="mt-1 text-sm text-ink-600 dark:text-ink-200">{comment.body}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+              <p class="text-xs text-ink-400">
+                {internalComments.length} internal · {externalComments.length} external
+              </p>
+            </div>
+          )}
+
+          {activeTab === 'timeline' && (
+            <div class="p-5">
+              {auditEvents.length === 0 ? (
+                <p class="text-sm text-ink-400">
+                  No event history available — this view requires audit-log access.
+                </p>
+              ) : (
+                <div class="space-y-4">
+                  {auditEvents.map((event) => (
+                    <div class="flex gap-3 border-b border-ink-100 pb-3 last:border-b-0 dark:border-ink-700">
+                      <div class="flex-1">
+                        <p class="text-sm font-medium text-ink-700 dark:text-ink-50">
+                          {AUDIT_ACTION_LABELS[event.action] ?? event.action}
+                        </p>
+                        <p class="text-xs text-ink-400">
+                          {event.actor_role || 'System'}
+                          {event.reason && ` · ${event.reason}`}
+                        </p>
+                      </div>
+                      <span class="text-xs text-ink-400">
+                        {event.occurred_at.slice(0, 16).replace('T', ' ')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+</AppLayout>
