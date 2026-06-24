@@ -3,8 +3,8 @@ import type { OverviewReport } from '../types';
 import { STAGE_MIX, STATUS_META, formatUgx, initialsOf } from '../presentation';
 import { STAGE_ICONS } from '../../../shell/icons';
 import KpiCard from './KpiCard';
-import Badge from './Badge';
-import Avatar from './Avatar';
+import Badge from '../../../shared/components/Badge';
+import Avatar from '../../../shared/components/Avatar';
 
 interface Props {
   report: OverviewReport;
@@ -19,11 +19,17 @@ const STAGE_COUNT_KEYS: Record<string, keyof OverviewReport> = {
   returned: 'returned_to_agent',
 };
 
+const STAGE_STATUS_FILTER: Record<string, string> = {
+  review: 'review',
+  chairPending: 'chair_pending',
+  returned: 'returned',
+};
+
 export default function OverviewDashboard({ report, firstName, scopeLabel, today }: Props) {
   const barRows = Object.entries(report.by_status)
     .filter(([, v]) => v > 0)
-    .map(([status, count]) => [STATUS_META[status]?.label ?? status, count] as const);
-  const maxBar = Math.max(...barRows.map(([, v]) => v), 1);
+    .map(([status, count]) => [status, STATUS_META[status]?.label ?? status, count] as const);
+  const maxBar = Math.max(...barRows.map(([, , v]) => v), 1);
 
   return (
     <div>
@@ -113,6 +119,9 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
                 return (
                   <tr
                     key={lead.id}
+                    onClick={() => {
+                      window.location.href = `/leads?search=${lead.id}`;
+                    }}
                     className="cursor-pointer border-t border-ink-100 hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-700/40"
                   >
                     <td className="px-5 py-3 font-mono text-xs text-ink-500 dark:text-ink-300">
@@ -182,7 +191,7 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
                     <p className="text-xs text-ink-400">{stage.sub}</p>
                   </div>
                   <a
-                    href="/leads"
+                    href={`/leads?status=${STAGE_STATUS_FILTER[stage.key]}`}
                     className="text-xs font-medium text-cente-blue-600 dark:text-cente-blue-300"
                   >
                     View
@@ -200,8 +209,12 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
           <span className="text-xs text-ink-400">Current snapshot</span>
         </div>
         <div className="flex flex-col gap-3 p-5">
-          {barRows.map(([label, value]) => (
-            <div key={label} className="flex items-center gap-3">
+          {barRows.map(([status, label, value]) => (
+            <a
+              key={status}
+              href={`/leads?status=${status}`}
+              className="flex items-center gap-3 hover:opacity-80"
+            >
               <span className="w-40 shrink-0 text-sm text-ink-500 dark:text-ink-300">{label}</span>
               <div className="h-2 flex-1 rounded-pill bg-ink-100 dark:bg-ink-700">
                 <div
@@ -212,7 +225,7 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
               <span className="w-8 shrink-0 text-right text-sm font-medium text-ink-700 dark:text-ink-50">
                 {value}
               </span>
-            </div>
+            </a>
           ))}
         </div>
       </div>
