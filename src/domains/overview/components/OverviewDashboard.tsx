@@ -1,19 +1,10 @@
-import {
-  Inbox,
-  ClipboardList,
-  Clock,
-  RotateCcw,
-  Download,
-  ArrowRight,
-  TrendingUp,
-} from 'lucide-react';
+import { Inbox, ClipboardList, Clock, RotateCcw, Download, ArrowRight } from 'lucide-react';
 import type { OverviewReport } from '../types';
-import { RECENT_LEADS, TREND_12W, STAGE_MIX, STATUS_META, formatUgx } from '../mock-data';
+import { STAGE_MIX, STATUS_META, formatUgx, initialsOf } from '../presentation';
 import { STAGE_ICONS } from '../../../shell/icons';
 import KpiCard from './KpiCard';
 import Badge from './Badge';
 import Avatar from './Avatar';
-import Sparkline from './Sparkline';
 
 interface Props {
   report: OverviewReport;
@@ -64,29 +55,25 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
           label="Total in Pipeline"
           icon={Inbox}
           value={report.total_in_pipeline}
-          delta="All active leads in scope"
-          deltaDir="flat"
+          caption="All active leads in scope"
         />
         <KpiCard
           label="Bank Reviewing"
           icon={ClipboardList}
           value={report.bank_reviewing}
-          delta="Current stage count"
-          deltaDir="flat"
+          caption="Current stage count"
         />
         <KpiCard
           label="Stuck at Chair Approval"
           icon={Clock}
           value={report.stuck_at_chair_approval}
-          delta={report.stuck_at_chair_approval > 0 ? 'Follow up required' : 'No blockers'}
-          deltaDir={report.stuck_at_chair_approval > 0 ? 'down' : 'flat'}
+          caption={report.stuck_at_chair_approval > 0 ? 'Follow up required' : 'No blockers'}
         />
         <KpiCard
           label="Returned to Agent"
           icon={RotateCcw}
           value={report.returned_to_agent}
-          delta="Needs resubmission"
-          deltaDir="down"
+          caption="Current stage count"
         />
       </div>
 
@@ -114,41 +101,48 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
               </tr>
             </thead>
             <tbody>
-              {RECENT_LEADS.map((lead) => {
-                const meta = STATUS_META[lead.status];
+              {report.recent_activity.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-5 py-6 text-center text-ink-400">
+                    No leads yet.
+                  </td>
+                </tr>
+              )}
+              {report.recent_activity.map((lead) => {
+                const meta = STATUS_META[lead.status] ?? { label: lead.status, color: 'neutral' };
                 return (
                   <tr
                     key={lead.id}
                     className="cursor-pointer border-t border-ink-100 hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-700/40"
                   >
                     <td className="px-5 py-3 font-mono text-xs text-ink-500 dark:text-ink-300">
-                      {lead.id}
+                      {lead.id.slice(0, 8)}
                     </td>
                     <td className="px-2 py-3">
                       <div className="flex items-center gap-2.5">
-                        <Avatar initials={lead.initials} />
+                        <Avatar initials={initialsOf(lead.applicant_name)} />
                         <div>
                           <p className="font-medium text-ink-700 dark:text-ink-50">
-                            {lead.applicant}
+                            {lead.applicant_name}
                           </p>
-                          <p className="text-xs text-ink-400">{lead.nin}</p>
+                          <p className="text-xs text-ink-400">{lead.applicant_nin}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-2 py-3 text-ink-500 dark:text-ink-300">
-                      {lead.source === 'agent' ? 'Field Agent' : 'Branch'}
+                      {lead.initiation_channel === 'agent' ? 'Field Agent' : 'Branch'}
                     </td>
                     <td className="px-2 py-3 text-ink-500 dark:text-ink-300">
-                      {lead.cooperative || '-'}
+                      {lead.cooperative_name ?? '-'}
                     </td>
                     <td className="px-2 py-3 text-right font-semibold text-ink-700 dark:text-ink-50">
-                      {formatUgx(lead.amountUgx)}
+                      {formatUgx(lead.amount_requested)}
                     </td>
                     <td className="px-2 py-3">
                       <Badge label={meta.label} color={meta.color} />
                     </td>
                     <td className="px-5 py-3 text-sm text-ink-500 dark:text-ink-300">
-                      {lead.branch}
+                      {lead.branch_name}
                     </td>
                   </tr>
                 );
@@ -158,26 +152,6 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="rounded-md border border-ink-100 bg-white p-5 dark:border-ink-700 dark:bg-ink-800">
-            <h3 className="mb-3 text-sm font-semibold text-ink-700 dark:text-ink-50">
-              Applications · 12 weeks
-            </h3>
-            <div className="mb-2 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">
-                  This week
-                </p>
-                <p className="text-2xl font-bold text-ink-700 dark:text-ink-50">
-                  {TREND_12W.at(-1)} <span className="text-sm font-medium text-ink-400">apps</span>
-                </p>
-              </div>
-              <span className="flex items-center gap-1 rounded-sm bg-success-soft px-2 py-1 text-xs font-medium text-success dark:bg-success/20">
-                <TrendingUp size={13} /> +6.1%
-              </span>
-            </div>
-            <Sparkline data={TREND_12W} />
-          </div>
-
           <div className="rounded-md border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
             <h3 className="border-b border-ink-100 px-5 py-4 text-sm font-semibold text-ink-700 dark:border-ink-700 dark:text-ink-50">
               Stage Mix

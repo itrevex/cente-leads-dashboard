@@ -1,31 +1,14 @@
 import type { LucideIcon } from 'lucide-react';
-import { TrendingDown, TrendingUp, Minus } from 'lucide-react';
 
 interface Props {
   label: string;
   icon: LucideIcon;
   value: number;
-  delta: string;
-  deltaDir?: 'up' | 'down' | 'flat';
+  caption: string;
   brand?: boolean;
 }
 
-const deltaIcon = { up: TrendingUp, down: TrendingDown, flat: Minus };
-const deltaColor = {
-  up: 'text-success',
-  down: 'text-cente-red-600',
-  flat: 'text-ink-400',
-};
-
-export default function KpiCard({
-  label,
-  icon: Icon,
-  value,
-  delta,
-  deltaDir = 'flat',
-  brand,
-}: Props) {
-  const DeltaIcon = deltaIcon[deltaDir];
+export default function KpiCard({ label, icon: Icon, value, caption, brand }: Props) {
   return (
     <div
       className={`rounded-md border p-5 ${
@@ -47,14 +30,7 @@ export default function KpiCard({
       >
         {value}
       </div>
-      <div
-        className={`mt-2 flex items-center gap-1.5 text-xs ${
-          brand ? 'text-white/75' : deltaColor[deltaDir]
-        }`}
-      >
-        <DeltaIcon size={13} />
-        {delta}
-      </div>
+      <div className={`mt-2 text-xs ${brand ? 'text-white/75' : 'text-ink-400'}`}>{caption}</div>
     </div>
   );
 }
