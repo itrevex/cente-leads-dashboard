@@ -17,7 +17,9 @@ export default function SidebarNav({ sections, currentPath }: Props) {
           <ul className="flex flex-col gap-0.5">
             {section.items.map((item) => {
               const Icon = NAV_ICONS[item.icon];
-              const active = currentPath === item.href;
+              const active =
+                currentPath === item.href ||
+                (item.href !== '/' && currentPath.startsWith(`${item.href}/`));
               return (
                 <li key={item.id} className="relative">
                   {active && (
