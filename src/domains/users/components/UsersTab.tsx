@@ -5,6 +5,9 @@ import type { DashboardRole } from '../../../shared/types';
 import { ROLE_LABELS } from '../presentation';
 import { createUser, updateUser, suspendUser, reactivateUser, UsersApiError } from '../client';
 import Badge from '../../../shared/components/Badge';
+import Pagination from '../../../shared/components/Pagination';
+
+const PAGE_SIZE = 10;
 
 interface Props {
   initialUsers: DashboardUser[];
@@ -32,10 +35,14 @@ export default function UsersTab({ initialUsers, roles, branchOptions, canManage
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const filteredUsers = users.filter(
     (u) => (!roleFilter || u.role === roleFilter) && (!branchFilter || u.branch === branchFilter),
   );
+  const pageCount = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedUsers = filteredUsers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   function startCreate() {
     setForm(emptyForm);
@@ -109,7 +116,10 @@ export default function UsersTab({ initialUsers, roles, branchOptions, canManage
         <div className="flex items-center gap-3">
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setPage(1);
+            }}
             className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
           >
             <option value="">All roles</option>
@@ -121,7 +131,10 @@ export default function UsersTab({ initialUsers, roles, branchOptions, canManage
           </select>
           <select
             value={branchFilter}
-            onChange={(e) => setBranchFilter(e.target.value)}
+            onChange={(e) => {
+              setBranchFilter(e.target.value);
+              setPage(1);
+            }}
             className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
           >
             <option value="">All branches</option>
@@ -270,7 +283,7 @@ export default function UsersTab({ initialUsers, roles, branchOptions, canManage
                 </td>
               </tr>
             )}
-            {filteredUsers.map((u) => (
+            {pagedUsers.map((u) => (
               <tr
                 key={u.id}
                 className="border-t border-ink-100 hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-700/40"
@@ -320,6 +333,13 @@ export default function UsersTab({ initialUsers, roles, branchOptions, canManage
             ))}
           </tbody>
         </table>
+        <Pagination
+          page={currentPage}
+          pageCount={pageCount}
+          totalCount={filteredUsers.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );
