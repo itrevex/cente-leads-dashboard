@@ -1,0 +1,34 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import ProductsListPage from '../components/ProductsListPage';
+import { getProducts } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { LoanProduct } from '../types';
+
+const { user } = Astro.locals;
+
+let products: LoanProduct[] = [];
+let forbidden = false;
+try {
+  products = await getProducts(Astro.locals.accessToken);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else {
+    throw err;
+  }
+}
+
+const canManage = user.permissions.includes('manage_products');
+---
+
+<AppLayout title="Loan Products">
+  {
+    forbidden ? (
+      <NotAuthorized message="You don't have permission to view loan products." />
+    ) : (
+      <ProductsListPage initialProducts={products} canManage={canManage} client:load />
+    )
+  }
+</AppLayout>

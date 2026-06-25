@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type SubmitEvent } from 'react';
 
 type Step = { kind: 'credentials' } | { kind: 'otp'; sessionToken: string };
 
@@ -16,7 +16,7 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleCredentialsSubmit(event: FormEvent) {
+  async function handleCredentialsSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
@@ -41,7 +41,7 @@ export default function LoginForm() {
     }
   }
 
-  async function handleOtpSubmit(event: FormEvent) {
+  async function handleOtpSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (step.kind !== 'otp') return;
     setSubmitting(true);

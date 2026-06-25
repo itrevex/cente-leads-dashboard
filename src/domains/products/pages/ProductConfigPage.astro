@@ -1,0 +1,53 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import ProductConfigApp from '../components/ProductConfigApp';
+import { getProduct, getBranchOptions, getLatestFormSchema } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { LoanProduct, LeadFormSchema, BranchOption } from '../types';
+
+const { id } = Astro.params;
+const { user } = Astro.locals;
+
+let product: LoanProduct | null = null;
+let schema: LeadFormSchema | null = null;
+let branchOptions: BranchOption[] = [];
+let forbidden = false;
+let notFound = false;
+
+try {
+  [product, schema, branchOptions] = await Promise.all([
+    getProduct(Astro.locals.accessToken, id as string),
+    getLatestFormSchema(Astro.locals.accessToken, id as string),
+    getBranchOptions(Astro.locals.accessToken),
+  ]);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else if (err instanceof ApiError && err.status === 404) {
+    notFound = true;
+  } else {
+    throw err;
+  }
+}
+
+const canManage = user.permissions.includes('manage_products');
+---
+
+<AppLayout title="Loan Product">
+  {
+    forbidden ? (
+      <NotAuthorized message="You don't have permission to view this loan product." />
+    ) : notFound || !product ? (
+      <NotAuthorized message="Loan product not found." />
+    ) : (
+      <ProductConfigApp
+        initialProduct={product}
+        initialSchema={schema}
+        branchOptions={branchOptions}
+        canManage={canManage}
+        client:load
+      />
+    )
+  }
+</AppLayout>
