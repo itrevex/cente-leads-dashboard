@@ -1,7 +1,9 @@
 ---
-import { navForRole } from './nav';
+import { navForRole, withNavCounts } from './nav';
 import type { DashboardRole } from '../shared/types';
 import SidebarNav from './SidebarNav';
+import { getStatusCounts } from '../domains/leads/api';
+import { ApiError } from '../shared/api-client';
 
 interface Props {
   role: DashboardRole;
@@ -9,8 +11,41 @@ interface Props {
 }
 
 const { role, userName } = Astro.props;
-const sections = navForRole(role);
+const { user, accessToken } = Astro.locals;
+let sections = navForRole(role);
 const currentPath = Astro.url.pathname;
+
+const navIds = new Set(sections.flatMap((section) => section.items.map((item) => item.id)));
+
+// "Active" = not yet at a terminal status (recommended/declined) — same
+// definition as LeadStatus.terminal_states() on the backend. Counts power
+// the nav badges (prototype's nav-item__count) for Leads/My Leads.
+function activeCount(byStatus: Record<string, number>, all: number): number {
+  return all - (byStatus.recommended ?? 0) - (byStatus.declined ?? 0);
+}
+
+if (navIds.has('leads') || navIds.has('queue-mine')) {
+  try {
+    const myLeadsFilter =
+      role === 'branch_manager'
+        ? { branch: user.branch ?? undefined }
+        : { reviewing_officer: user.id };
+    const [allCounts, mineCounts] = await Promise.all([
+      navIds.has('leads') ? getStatusCounts(accessToken) : Promise.resolve(null),
+      navIds.has('queue-mine')
+        ? getStatusCounts(accessToken, myLeadsFilter)
+        : Promise.resolve(null),
+    ]);
+    const countsById: Record<string, number> = {};
+    if (allCounts) countsById.leads = activeCount(allCounts.by_status, allCounts.all);
+    if (mineCounts) countsById['queue-mine'] = activeCount(mineCounts.by_status, mineCounts.all);
+    sections = withNavCounts(sections, countsById);
+  } catch (err) {
+    if (!(err instanceof ApiError && err.status === 403)) {
+      throw err;
+    }
+  }
+}
 const initials = userName
   .split(' ')
   .map((part) => part[0])

@@ -5,6 +5,8 @@ export interface NavItem {
   label: string;
   href: string;
   icon: string;
+  count?: number;
+  alert?: boolean;
 }
 
 export interface NavSection {
@@ -15,7 +17,7 @@ export interface NavSection {
 const WORKSPACE: NavItem[] = [
   { id: 'overview', label: 'Overview', href: '/', icon: 'layout-dashboard' },
   { id: 'leads', label: 'Leads', href: '/leads', icon: 'inbox' },
-  { id: 'queue-mine', label: 'My Leads', href: '/leads/mine', icon: 'user-check' },
+  { id: 'queue-mine', label: 'My Leads', href: '/leads/mine', icon: 'user-check', alert: true },
 ];
 
 const CONFIGURATION: NavItem[] = [
@@ -75,4 +77,19 @@ export function navForRole(role: DashboardRole): NavSection[] {
     filterSection('Configuration', CONFIGURATION),
     filterSection('Insights', INSIGHTS),
   ].filter((section): section is NavSection => section !== null);
+}
+
+// Attaches live counts (e.g. active-lead totals) to nav items by id —
+// kept separate from navForRole so the role/permission filtering logic
+// stays independent of any particular count source.
+export function withNavCounts(
+  sections: NavSection[],
+  countsById: Record<string, number>,
+): NavSection[] {
+  return sections.map((section) => ({
+    ...section,
+    items: section.items.map((item) =>
+      item.id in countsById ? { ...item, count: countsById[item.id] } : item,
+    ),
+  }));
 }

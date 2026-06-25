@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { navForRole } from './nav';
+import { navForRole, withNavCounts } from './nav';
 
 function flatIds(role: Parameters<typeof navForRole>[0]): string[] {
   return navForRole(role).flatMap((section) => section.items.map((item) => item.id));
@@ -35,5 +35,18 @@ describe('navForRole', () => {
   it('falls back to no nav items for an unmapped role', () => {
     // @ts-expect-error - deliberately testing an out-of-union value
     expect(navForRole('unknown_role')).toEqual([]);
+  });
+});
+
+describe('withNavCounts', () => {
+  it('attaches counts only to items present in the map', () => {
+    const sections = navForRole('branch_officer');
+    const withCounts = withNavCounts(sections, { leads: 19, 'queue-mine': 1 });
+    const byId = Object.fromEntries(
+      withCounts.flatMap((section) => section.items).map((item) => [item.id, item.count]),
+    );
+    expect(byId.leads).toBe(19);
+    expect(byId['queue-mine']).toBe(1);
+    expect(byId.overview).toBeUndefined();
   });
 });
