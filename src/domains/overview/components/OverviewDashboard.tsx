@@ -43,9 +43,12 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 rounded-pill border border-ink-200 px-4 py-2 text-sm text-ink-600 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800">
+          <a
+            href="/api/reports/overview/export"
+            className="flex items-center gap-2 rounded-pill border border-ink-200 px-4 py-2 text-sm text-ink-600 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
+          >
             <Download size={15} /> Export
-          </button>
+          </a>
           <a
             href="/leads"
             className="flex items-center gap-2 rounded-pill bg-cente-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-cente-red-600"
