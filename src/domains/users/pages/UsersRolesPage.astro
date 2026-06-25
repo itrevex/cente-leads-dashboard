@@ -1,0 +1,49 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import UsersRolesApp from '../components/UsersRolesApp';
+import { getUsers, getRoles, getPermissions, getBranchOptions } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { DashboardUser, Role, DashboardPermission, BranchOption } from '../types';
+
+const { user } = Astro.locals;
+
+let users: DashboardUser[] = [];
+let roles: Role[] = [];
+let permissions: DashboardPermission[] = [];
+let branchOptions: BranchOption[] = [];
+let forbidden = false;
+try {
+  [users, roles, permissions, branchOptions] = await Promise.all([
+    getUsers(Astro.locals.accessToken),
+    getRoles(Astro.locals.accessToken),
+    getPermissions(Astro.locals.accessToken),
+    getBranchOptions(Astro.locals.accessToken),
+  ]);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else {
+    throw err;
+  }
+}
+
+const canManage = user.permissions.includes('manage_users');
+---
+
+<AppLayout title="Users & Roles">
+  {
+    forbidden ? (
+      <NotAuthorized message="You don't have permission to view users." />
+    ) : (
+      <UsersRolesApp
+        initialUsers={users}
+        initialRoles={roles}
+        permissions={permissions}
+        branchOptions={branchOptions}
+        canManage={canManage}
+        client:load
+      />
+    )
+  }
+</AppLayout>
