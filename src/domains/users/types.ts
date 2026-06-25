@@ -11,6 +11,7 @@ export interface DashboardUser {
   status: UserStatus;
   permissions: PermissionKey[];
   can_be_reviewing_officer: boolean;
+  last_login: string | null;
   created_at: string;
   updated_at: string;
 }

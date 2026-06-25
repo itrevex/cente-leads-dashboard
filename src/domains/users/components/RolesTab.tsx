@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ShieldCheck, Plus } from 'lucide-react';
 import type { Role, DashboardPermission } from '../types';
 import { createRole, updateRolePermissions, UsersApiError } from '../client';
+import { formatLastActivity } from '../presentation';
 import Badge from '../../../shared/components/Badge';
 
 interface Props {
@@ -148,7 +149,12 @@ export default function RolesTab({ initialRoles, permissions, canManage }: Props
             >
               <span className="flex items-center gap-2">
                 <ShieldCheck size={14} />
-                {role.name}
+                <span>
+                  <span className="block">{role.name}</span>
+                  <span className="block text-xs font-normal text-ink-400">
+                    {formatLastActivity(role.updated_at)}
+                  </span>
+                </span>
               </span>
               {role.is_builtin && <Badge label="Built-in" color="neutral" />}
             </button>
@@ -169,6 +175,9 @@ export default function RolesTab({ initialRoles, permissions, canManage }: Props
                 {selectedRole.description && (
                   <p className="text-xs text-ink-400">{selectedRole.description}</p>
                 )}
+                <p className="mt-1 text-xs text-ink-400">
+                  Last activity: {formatLastActivity(selectedRole.updated_at)}
+                </p>
               </div>
               {canManage && (
                 <button

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, UserRound, Download } from 'lucide-react';
 import type { DashboardUser, Role, BranchOption } from '../types';
 import type { DashboardRole } from '../../../shared/types';
-import { ROLE_LABELS } from '../presentation';
+import { ROLE_LABELS, formatLastActivity } from '../presentation';
 import { createUser, updateUser, suspendUser, reactivateUser, UsersApiError } from '../client';
 import Badge from '../../../shared/components/Badge';
 import Pagination from '../../../shared/components/Pagination';
@@ -272,13 +272,14 @@ export default function UsersTab({ initialUsers, roles, branchOptions, canManage
               <th className="px-2 py-2 font-medium">Branch</th>
               <th className="px-2 py-2 font-medium">Contact</th>
               <th className="px-2 py-2 font-medium">Status</th>
+              <th className="px-2 py-2 font-medium">Last activity</th>
               {canManage && <th className="px-5 py-2 text-right font-medium">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {filteredUsers.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-6 text-center text-ink-400">
+                <td colSpan={7} className="px-5 py-6 text-center text-ink-400">
                   No users found.
                 </td>
               </tr>
@@ -309,6 +310,9 @@ export default function UsersTab({ initialUsers, roles, branchOptions, canManage
                     label={u.status === 'active' ? 'Active' : 'Disabled'}
                     color={u.status === 'active' ? 'green' : 'neutral'}
                   />
+                </td>
+                <td className="px-2 py-3 text-ink-500 dark:text-ink-300">
+                  {formatLastActivity(u.last_login)}
                 </td>
                 {canManage && (
                   <td className="px-5 py-3 text-right">
