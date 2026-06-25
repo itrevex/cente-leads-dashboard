@@ -2,22 +2,46 @@
 import AppLayout from '../../../shell/AppLayout.astro';
 import NotAuthorized from '../../../shell/NotAuthorized.astro';
 import { ApiError } from '../../../shared/api-client';
-import { getLeads, getBranchOptions, getCooperativeOptions, getAgentOptions } from '../api';
+import {
+  getLeads,
+  getStatusCounts,
+  getBranchOptions,
+  getCooperativeOptions,
+  getAgentOptions,
+} from '../api';
 import { STATUS_META, formatUgx, initialsOf } from '../../../shared/lead-presentation';
-import { STATUS_FILTER_OPTIONS, SOURCE_FILTER_OPTIONS } from '../presentation';
+import { STATUS_BUCKETS, SOURCE_FILTER_OPTIONS } from '../presentation';
 import Badge from '../../../shared/components/Badge';
 import Avatar from '../../../shared/components/Avatar';
-import type { Lead, LeadFilters, PaginatedResponse } from '../types';
+import type { Lead, LeadFilters, PaginatedResponse, StatusCounts } from '../types';
+
+interface Props {
+  myLeads?: boolean;
+}
+
+const { myLeads = false } = Astro.props;
 
 const { user } = Astro.locals;
 const accessToken = Astro.locals.accessToken;
 const params = Astro.url.searchParams;
+const basePath = myLeads ? '/leads/mine' : '/leads';
 
 const PAGE_SIZE = 25;
 const page = Math.max(1, parseInt(params.get('page') ?? '1', 10) || 1);
 
-const filters: LeadFilters = {
-  status: params.get('status') ?? undefined,
+// branch_manager has no reviewing_officer role of their own (only
+// branch_officer/loan_officer/head_of_loans can be set as
+// reviewing_officer — see REVIEWING_OFFICER_ROLES in
+// apps.leads.serializers), so "My Leads" means "my branch" for them and
+// "leads I'm reviewing" for everyone else who can see the nav item.
+const myLeadsScope: Partial<LeadFilters> =
+  myLeads && user.role === 'branch_manager'
+    ? { branch: user.branch ?? undefined }
+    : myLeads
+      ? { reviewing_officer: user.id }
+      : {};
+
+const baseFilters: LeadFilters = {
   branch: params.get('branch') ?? undefined,
   cooperative: params.get('cooperative') ?? undefined,
   assigned_agent: params.get('assigned_agent') ?? undefined,
@@ -25,19 +49,29 @@ const filters: LeadFilters = {
   search: params.get('search') ?? undefined,
   created_from: params.get('created_from') ?? undefined,
   created_to: params.get('created_to') ?? undefined,
+  ...myLeadsScope,
+};
+
+const statusParam = params.get('status') ?? undefined;
+
+const filters: LeadFilters = {
+  ...baseFilters,
+  status: statusParam,
   limit: PAGE_SIZE,
   offset: (page - 1) * PAGE_SIZE,
 };
 
 let leadsPage: PaginatedResponse<Lead> | null = null;
+let statusCounts: StatusCounts | null = null;
 let branchOptions: { id: string; name: string }[] = [];
 let cooperativeOptions: { id: string; name: string }[] = [];
 let agentOptions: { id: string; full_name: string }[] = [];
 let forbidden = false;
 
 try {
-  [leadsPage, branchOptions, cooperativeOptions, agentOptions] = await Promise.all([
+  [leadsPage, statusCounts, branchOptions, cooperativeOptions, agentOptions] = await Promise.all([
     getLeads(accessToken, filters),
+    getStatusCounts(accessToken, baseFilters),
     getBranchOptions(accessToken),
     getCooperativeOptions(accessToken),
     getAgentOptions(accessToken),
@@ -56,13 +90,26 @@ const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 function pageHref(targetPage: number): string {
   const next = new URLSearchParams(params);
   next.set('page', String(targetPage));
-  return `/leads?${next.toString()}`;
+  return `${basePath}?${next.toString()}`;
+}
+
+function bucketHref(statusValue: string): string {
+  const next = new URLSearchParams(params);
+  next.delete('page');
+  if (statusValue) {
+    next.set('status', statusValue);
+  } else {
+    next.delete('status');
+  }
+  const query = next.toString();
+  return query ? `${basePath}?${query}` : basePath;
 }
 
 const scopeLabel = user.branch ? 'Branch scope' : 'All branches';
+const pageTitle = myLeads ? 'My Leads' : 'Leads';
 ---
 
-<AppLayout title="Leads">
+<AppLayout title={pageTitle}>
   {
     forbidden || !leadsPage ? (
       <NotAuthorized message="You don't have permission to view leads." />
@@ -71,7 +118,7 @@ const scopeLabel = user.branch ? 'Branch scope' : 'All branches';
         <div class="mb-6 flex items-center justify-between">
           <div>
             <h1 class="text-2xl font-semibold text-cente-blue-600 dark:text-cente-blue-300">
-              Leads
+              {pageTitle}
             </h1>
             <p class="mt-1 text-sm text-ink-500 dark:text-ink-300">
               {scopeLabel} · {totalCount} leads in scope
@@ -79,10 +126,41 @@ const scopeLabel = user.branch ? 'Branch scope' : 'All branches';
           </div>
         </div>
 
+        <div class="mb-4 flex flex-wrap gap-2 rounded-md border border-ink-100 bg-white p-3 dark:border-ink-700 dark:bg-ink-800">
+          {STATUS_BUCKETS.map((bucket) => {
+            const count = bucket.value
+              ? (statusCounts?.by_status[bucket.value] ?? 0)
+              : (statusCounts?.all ?? 0);
+            const active = (statusParam ?? '') === bucket.value;
+            return (
+              <a
+                href={bucketHref(bucket.value)}
+                class={`flex items-center gap-1.5 rounded-pill border px-3 py-1.5 text-xs font-medium ${
+                  active
+                    ? 'border-cente-blue-600 bg-cente-blue-600 text-white'
+                    : 'border-ink-200 text-ink-600 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-700/40'
+                }`}
+              >
+                {bucket.label}
+                <span
+                  class={`rounded-pill px-1.5 py-0.5 text-[11px] ${
+                    active
+                      ? 'bg-white/20 text-white'
+                      : 'bg-ink-100 text-ink-500 dark:bg-ink-700 dark:text-ink-300'
+                  }`}
+                >
+                  {count}
+                </span>
+              </a>
+            );
+          })}
+        </div>
+
         <form
           method="get"
           class="mb-4 flex flex-wrap items-end gap-3 rounded-md border border-ink-100 bg-white p-4 dark:border-ink-700 dark:bg-ink-800"
         >
+          <input type="hidden" name="status" value={statusParam ?? ''} />
           <div class="flex flex-col gap-1">
             <label for="search" class="text-xs font-medium text-ink-500 dark:text-ink-300">
               Search
@@ -95,23 +173,6 @@ const scopeLabel = user.branch ? 'Branch scope' : 'All branches';
               value={params.get('search') ?? ''}
               class="w-56 rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
             />
-          </div>
-
-          <div class="flex flex-col gap-1">
-            <label for="status" class="text-xs font-medium text-ink-500 dark:text-ink-300">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              class="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
-            >
-              {STATUS_FILTER_OPTIONS.map((opt) => (
-                <option value={opt.value} selected={params.get('status') === opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div class="flex flex-col gap-1">
@@ -219,7 +280,7 @@ const scopeLabel = user.branch ? 'Branch scope' : 'All branches';
               Apply
             </button>
             <a
-              href="/leads"
+              href={basePath}
               class="rounded-pill border border-ink-200 px-4 py-2 text-sm text-ink-600 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800"
             >
               Clear
@@ -270,7 +331,19 @@ const scopeLabel = user.branch ? 'Branch scope' : 'All branches';
                         </div>
                       </div>
                     </td>
-                    <td class="px-2 py-3 text-ink-500 dark:text-ink-300">{lead.source_label}</td>
+                    <td class="px-2 py-3">
+                      {lead.initiation_source === 'agent_referral' ? (
+                        <Badge
+                          label={`Agent · ${lead.assigned_agent_name ?? 'Unassigned'}`}
+                          color="blue"
+                        />
+                      ) : (
+                        <Badge
+                          label={`Branch · ${lead.reviewing_officer_name ?? 'Unassigned'}`}
+                          color="neutral"
+                        />
+                      )}
+                    </td>
                     <td class="px-2 py-3 text-ink-500 dark:text-ink-300">
                       {lead.cooperative_name ?? '-'}
                     </td>

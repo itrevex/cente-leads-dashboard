@@ -1,8 +1,9 @@
 export { STATUS_META, formatUgx, initialsOf } from '../../shared/lead-presentation';
 
-export const STATUS_FILTER_OPTIONS = [
-  { value: '', label: 'All statuses' },
-  { value: 'draft', label: 'Draft' },
+// Filter-chip buckets above the leads table (prototype's `buckets` in
+// screens-main.jsx) — '' means "All".
+export const STATUS_BUCKETS = [
+  { value: '', label: 'All' },
   { value: 'chair_pending', label: 'Chair Pending' },
   { value: 'review', label: 'Bank Reviewing' },
   { value: 'info_requested', label: 'Info Requested' },

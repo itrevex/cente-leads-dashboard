@@ -121,6 +121,11 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+export interface StatusCounts {
+  all: number;
+  by_status: Record<string, number>;
+}
+
 export interface LeadFilters {
   status?: string;
   branch?: string;

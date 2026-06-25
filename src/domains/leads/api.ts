@@ -9,6 +9,7 @@ import type {
   Comment,
   LeadDocument,
   AuditEvent,
+  StatusCounts,
 } from './types';
 
 interface NamedOption {
@@ -38,6 +39,19 @@ export function getLeads(
 ): Promise<PaginatedResponse<Lead>> {
   return request<PaginatedResponse<Lead>>(
     `/leads/${buildQuery(filters)}`,
+    { method: 'GET' },
+    accessToken,
+  );
+}
+
+// Status-bucket chip counts above the leads table — honors every active
+// filter except `status` itself, mirroring the prototype's filter chips.
+export function getStatusCounts(
+  accessToken: string,
+  filters: Omit<LeadFilters, 'status' | 'limit' | 'offset'> = {},
+): Promise<StatusCounts> {
+  return request<StatusCounts>(
+    `/leads/status-counts/${buildQuery(filters)}`,
     { method: 'GET' },
     accessToken,
   );
