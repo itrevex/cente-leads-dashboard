@@ -1,13 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { navForRole, withNavCounts } from './nav';
+import { navForPermissions, withNavCounts } from './nav';
 
-function flatIds(role: Parameters<typeof navForRole>[0]): string[] {
-  return navForRole(role).flatMap((section) => section.items.map((item) => item.id));
+function flatIds(permissions: string[]): string[] {
+  return navForPermissions(permissions).flatMap((section) => section.items.map((item) => item.id));
 }
 
-describe('navForRole', () => {
-  it('gives head_of_loans every nav item', () => {
-    expect(flatIds('head_of_loans')).toEqual(
+describe('navForPermissions', () => {
+  it('gives a fully-permissioned user every nav item', () => {
+    expect(
+      flatIds([
+        'view_leads',
+        'view_branches',
+        'view_cooperatives',
+        'view_agents',
+        'view_products',
+        'view_users',
+        'view_reports',
+        'view_audit',
+      ]),
+    ).toEqual(
       expect.arrayContaining([
         'overview',
         'leads',
@@ -23,24 +34,23 @@ describe('navForRole', () => {
     );
   });
 
-  it('restricts branch_officer to their own workspace', () => {
-    expect(flatIds('branch_officer')).toEqual(['overview', 'leads', 'queue-mine']);
+  it('restricts a view_leads-only user to their own workspace', () => {
+    expect(flatIds(['view_leads'])).toEqual(['overview', 'leads', 'queue-mine']);
   });
 
   it('omits a section entirely when no items in it are allowed', () => {
-    const sections = navForRole('branch_officer');
+    const sections = navForPermissions(['view_leads']);
     expect(sections.find((section) => section.label === 'Configuration')).toBeUndefined();
   });
 
-  it('falls back to no nav items for an unmapped role', () => {
-    // @ts-expect-error - deliberately testing an out-of-union value
-    expect(navForRole('unknown_role')).toEqual([]);
+  it('always shows overview, which requires no permission', () => {
+    expect(flatIds([])).toEqual(['overview']);
   });
 });
 
 describe('withNavCounts', () => {
   it('attaches counts only to items present in the map', () => {
-    const sections = navForRole('branch_officer');
+    const sections = navForPermissions(['view_leads']);
     const withCounts = withNavCounts(sections, { leads: 19, 'queue-mine': 1 });
     const byId = Object.fromEntries(
       withCounts.flatMap((section) => section.items).map((item) => [item.id, item.count]),

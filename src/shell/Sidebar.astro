@@ -1,5 +1,5 @@
 ---
-import { navForRole, withNavCounts } from './nav';
+import { navForPermissions, withNavCounts } from './nav';
 import type { DashboardRole } from '../shared/types';
 import SidebarNav from './SidebarNav';
 import { getStatusCounts } from '../domains/leads/api';
@@ -13,17 +13,16 @@ interface Props {
 
 const { role, userName } = Astro.props;
 const { user, accessToken } = Astro.locals;
-let sections = navForRole(role);
+let sections = navForPermissions(user.permissions);
 const currentPath = Astro.url.pathname;
 
 const navIds = new Set(sections.flatMap((section) => section.items.map((item) => item.id)));
 
 if (navIds.has('leads') || navIds.has('queue-mine')) {
   try {
-    const myLeadsFilter =
-      role === 'branch_manager'
-        ? { branch: user.branch ?? undefined }
-        : { reviewing_officer: user.id };
+    const myLeadsFilter = user.can_be_reviewing_officer
+      ? { reviewing_officer: user.id }
+      : { branch: user.branch ?? undefined };
     const [allCounts, mineCounts] = await Promise.all([
       navIds.has('leads') ? getStatusCounts(accessToken) : Promise.resolve(null),
       navIds.has('queue-mine')

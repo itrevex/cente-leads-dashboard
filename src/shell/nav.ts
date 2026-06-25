@@ -1,10 +1,13 @@
-import type { DashboardRole } from '../shared/types';
+import type { PermissionKey } from '../shared/types';
 
 export interface NavItem {
   id: string;
   label: string;
   href: string;
   icon: string;
+  // null/undefined = visible to every dashboard-credentialed role
+  // (e.g. Overview) with no corresponding DashboardPermission row.
+  requiredPermission?: PermissionKey;
   count?: number;
   alert?: boolean;
 }
@@ -16,59 +19,84 @@ export interface NavSection {
 
 const WORKSPACE: NavItem[] = [
   { id: 'overview', label: 'Overview', href: '/', icon: 'layout-dashboard' },
-  { id: 'leads', label: 'Leads', href: '/leads', icon: 'inbox' },
-  { id: 'queue-mine', label: 'My Leads', href: '/leads/mine', icon: 'user-check', alert: true },
+  { id: 'leads', label: 'Leads', href: '/leads', icon: 'inbox', requiredPermission: 'view_leads' },
+  {
+    id: 'queue-mine',
+    label: 'My Leads',
+    href: '/leads/mine',
+    icon: 'user-check',
+    requiredPermission: 'view_leads',
+    alert: true,
+  },
 ];
 
 const CONFIGURATION: NavItem[] = [
-  { id: 'products', label: 'Loan Products', href: '/products', icon: 'package' },
-  { id: 'users', label: 'Users & Roles', href: '/users', icon: 'users-round' },
-  { id: 'branches', label: 'Branch Network', href: '/branches', icon: 'building-2' },
-  { id: 'agents', label: 'Agents', href: '/agents', icon: 'user-round-check' },
-  { id: 'cooperatives', label: 'Cooperatives', href: '/cooperatives', icon: 'landmark' },
+  {
+    id: 'products',
+    label: 'Loan Products',
+    href: '/products',
+    icon: 'package',
+    requiredPermission: 'view_products',
+  },
+  {
+    id: 'users',
+    label: 'Users & Roles',
+    href: '/users',
+    icon: 'users-round',
+    requiredPermission: 'view_users',
+  },
+  {
+    id: 'branches',
+    label: 'Branch Network',
+    href: '/branches',
+    icon: 'building-2',
+    requiredPermission: 'view_branches',
+  },
+  {
+    id: 'agents',
+    label: 'Agents',
+    href: '/agents',
+    icon: 'user-round-check',
+    requiredPermission: 'view_agents',
+  },
+  {
+    id: 'cooperatives',
+    label: 'Cooperatives',
+    href: '/cooperatives',
+    icon: 'landmark',
+    requiredPermission: 'view_cooperatives',
+  },
 ];
 
 const INSIGHTS: NavItem[] = [
-  { id: 'reports', label: 'Reports', href: '/reports', icon: 'bar-chart-3' },
-  { id: 'audit', label: 'Audit Log', href: '/audit', icon: 'file-search' },
+  {
+    id: 'reports',
+    label: 'Reports',
+    href: '/reports',
+    icon: 'bar-chart-3',
+    requiredPermission: 'view_reports',
+  },
+  {
+    id: 'audit',
+    label: 'Audit Log',
+    href: '/audit',
+    icon: 'file-search',
+    requiredPermission: 'view_audit',
+  },
 ];
 
-// Per ADR-0009's role/permission model — mirrors what each role can already
-// reach on the backend, not an independent guess at UI affordances.
-const NAV_ITEM_IDS_BY_ROLE: Record<DashboardRole, Set<string>> = {
-  head_of_loans: new Set([
-    'overview',
-    'leads',
-    'queue-mine',
-    'branches',
-    'cooperatives',
-    'agents',
-    'products',
-    'users',
-    'reports',
-    'audit',
-  ]),
-  compliance_officer: new Set(['overview', 'leads', 'reports', 'audit']),
-  system_admin: new Set([
-    'overview',
-    'users',
-    'products',
-    'agents',
-    'cooperatives',
-    'reports',
-    'audit',
-  ]),
-  mcp_officer: new Set(['overview', 'leads', 'branches', 'reports', 'audit']),
-  branch_manager: new Set(['overview', 'leads', 'queue-mine', 'agents', 'cooperatives', 'reports']),
-  branch_officer: new Set(['overview', 'leads', 'queue-mine']),
-  loan_officer: new Set(['overview', 'leads', 'queue-mine']),
-  auditor: new Set(['overview', 'reports', 'audit']),
-};
+// Permission-driven (ADR-0009 Role/DashboardPermission/RolePermission) —
+// an item shows up for any role granted its requiredPermission, with no
+// role-name literal anywhere in this module. An admin granting a new
+// permission to a custom role makes the matching nav item appear with
+// no code change here.
+export function navForPermissions(permissions: PermissionKey[]): NavSection[] {
+  const granted = new Set(permissions);
+  const isVisible = (item: NavItem) =>
+    item.requiredPermission == null || granted.has(item.requiredPermission);
 
-export function navForRole(role: DashboardRole): NavSection[] {
-  const allowed = NAV_ITEM_IDS_BY_ROLE[role] ?? new Set<string>();
   const filterSection = (label: string, items: NavItem[]): NavSection | null => {
-    const visible = items.filter((item) => allowed.has(item.id));
+    const visible = items.filter(isVisible);
     return visible.length > 0 ? { label, items: visible } : null;
   };
 
@@ -80,7 +108,7 @@ export function navForRole(role: DashboardRole): NavSection[] {
 }
 
 // Attaches live counts (e.g. active-lead totals) to nav items by id —
-// kept separate from navForRole so the role/permission filtering logic
+// kept separate from navForPermissions so the permission-filtering logic
 // stays independent of any particular count source.
 export function withNavCounts(
   sections: NavSection[],

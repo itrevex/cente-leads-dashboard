@@ -30,16 +30,15 @@ const basePath = myLeads ? '/leads/mine' : '/leads';
 const PAGE_SIZE = 25;
 const page = Math.max(1, parseInt(params.get('page') ?? '1', 10) || 1);
 
-// branch_manager has no reviewing_officer role of their own (only
-// branch_officer/loan_officer/head_of_loans can be set as
-// reviewing_officer — see REVIEWING_OFFICER_ROLES in
-// apps.leads.serializers), so "My Leads" means "my branch" for them and
-// "leads I'm reviewing" for everyone else who can see the nav item.
+// Not every dashboard role is ever eligible to be Lead.reviewing_officer
+// (apps.accounts.models.UserRole.reviewing_officer_roles, e.g.
+// branch_manager) — for those, "My Leads" means "my branch" instead of
+// "leads I'm reviewing".
 const myLeadsScope: Partial<LeadFilters> =
-  myLeads && user.role === 'branch_manager'
-    ? { branch: user.branch ?? undefined }
+  myLeads && user.can_be_reviewing_officer
+    ? { reviewing_officer: user.id }
     : myLeads
-      ? { reviewing_officer: user.id }
+      ? { branch: user.branch ?? undefined }
       : {};
 
 const baseFilters: LeadFilters = {
@@ -117,7 +116,9 @@ function bucketHref(statusValue: string): string {
   return query ? `${basePath}?${query}` : basePath;
 }
 
-const scopeLabel = user.branch ? 'Branch scope' : 'All branches';
+const scopeLabel = user.permissions.includes('view_all_branches')
+  ? 'All branches'
+  : (user.branch_name ?? 'Branch scope');
 const pageTitle = myLeads ? 'My Leads' : 'Leads';
 ---
 

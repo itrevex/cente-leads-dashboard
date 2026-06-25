@@ -21,7 +21,9 @@ try {
 }
 
 const firstName = user.full_name.split(' ')[0];
-const scopeLabel = user.branch ? 'Branch oversight' : 'Head Office oversight — all branches';
+const scopeLabel = user.permissions.includes('view_all_branches')
+  ? 'Head Office oversight — all branches'
+  : `${user.branch_name ?? 'Branch'} oversight`;
 const today = new Date().toLocaleDateString('en-GB', {
   weekday: 'long',
   day: 'numeric',
