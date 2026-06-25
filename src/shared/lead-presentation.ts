@@ -22,6 +22,12 @@ export function formatUgx(minorUnits: number): string {
   return `UGX ${Math.round(minorUnits / 100).toLocaleString('en-US')}`;
 }
 
+// Mirrors apps.leads.models.LeadStatus.terminal_states() — a lead that's
+// recommended or declined is done, not part of an "active pipeline" count.
+export function activeCount(byStatus: Record<string, number>, all: number): number {
+  return all - (byStatus.recommended ?? 0) - (byStatus.declined ?? 0);
+}
+
 export function initialsOf(fullName: string): string {
   return fullName
     .split(' ')

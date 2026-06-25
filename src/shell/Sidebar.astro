@@ -4,6 +4,7 @@ import type { DashboardRole } from '../shared/types';
 import SidebarNav from './SidebarNav';
 import { getStatusCounts } from '../domains/leads/api';
 import { ApiError } from '../shared/api-client';
+import { activeCount } from '../shared/lead-presentation';
 
 interface Props {
   role: DashboardRole;
@@ -16,13 +17,6 @@ let sections = navForRole(role);
 const currentPath = Astro.url.pathname;
 
 const navIds = new Set(sections.flatMap((section) => section.items.map((item) => item.id)));
-
-// "Active" = not yet at a terminal status (recommended/declined) — same
-// definition as LeadStatus.terminal_states() on the backend. Counts power
-// the nav badges (prototype's nav-item__count) for Leads/My Leads.
-function activeCount(byStatus: Record<string, number>, all: number): number {
-  return all - (byStatus.recommended ?? 0) - (byStatus.declined ?? 0);
-}
 
 if (navIds.has('leads') || navIds.has('queue-mine')) {
   try {

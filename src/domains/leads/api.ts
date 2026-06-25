@@ -87,6 +87,25 @@ export async function getAgentOptions(accessToken: string): Promise<AgentOption[
   return page.results;
 }
 
+// Mirrors apps.leads.serializers.REVIEWING_OFFICER_ROLES — only these
+// roles can ever be set as Lead.reviewing_officer. /users/ only filters
+// by a single role per request, so fetch each in parallel and merge.
+export async function getReviewingOfficerOptions(accessToken: string): Promise<AgentOption[]> {
+  const roles = ['branch_officer', 'loan_officer', 'head_of_loans'];
+  const pages = await Promise.all(
+    roles.map((role) =>
+      request<PaginatedResponse<AgentOption>>(
+        `/users/?role=${role}&limit=200`,
+        { method: 'GET' },
+        accessToken,
+      ),
+    ),
+  );
+  return pages
+    .flatMap((page) => page.results)
+    .sort((a, b) => a.full_name.localeCompare(b.full_name));
+}
+
 export function getLead(accessToken: string, id: string): Promise<Lead> {
   return request<Lead>(`/leads/${id}/`, { method: 'GET' }, accessToken);
 }

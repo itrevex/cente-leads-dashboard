@@ -8,8 +8,9 @@ import {
   getBranchOptions,
   getCooperativeOptions,
   getAgentOptions,
+  getReviewingOfficerOptions,
 } from '../api';
-import { STATUS_META, formatUgx, initialsOf } from '../../../shared/lead-presentation';
+import { STATUS_META, formatUgx, initialsOf, activeCount } from '../../../shared/lead-presentation';
 import { STATUS_BUCKETS, SOURCE_FILTER_OPTIONS } from '../presentation';
 import Badge from '../../../shared/components/Badge';
 import Avatar from '../../../shared/components/Avatar';
@@ -45,6 +46,7 @@ const baseFilters: LeadFilters = {
   branch: params.get('branch') ?? undefined,
   cooperative: params.get('cooperative') ?? undefined,
   assigned_agent: params.get('assigned_agent') ?? undefined,
+  reviewing_officer: myLeads ? undefined : (params.get('reviewing_officer') ?? undefined),
   source: params.get('source') ?? undefined,
   search: params.get('search') ?? undefined,
   created_from: params.get('created_from') ?? undefined,
@@ -66,15 +68,24 @@ let statusCounts: StatusCounts | null = null;
 let branchOptions: { id: string; name: string }[] = [];
 let cooperativeOptions: { id: string; name: string }[] = [];
 let agentOptions: { id: string; full_name: string }[] = [];
+let reviewingOfficerOptions: { id: string; full_name: string }[] = [];
 let forbidden = false;
 
 try {
-  [leadsPage, statusCounts, branchOptions, cooperativeOptions, agentOptions] = await Promise.all([
+  [
+    leadsPage,
+    statusCounts,
+    branchOptions,
+    cooperativeOptions,
+    agentOptions,
+    reviewingOfficerOptions,
+  ] = await Promise.all([
     getLeads(accessToken, filters),
     getStatusCounts(accessToken, baseFilters),
     getBranchOptions(accessToken),
     getCooperativeOptions(accessToken),
     getAgentOptions(accessToken),
+    myLeads ? Promise.resolve([]) : getReviewingOfficerOptions(accessToken),
   ]);
 } catch (err) {
   if (err instanceof ApiError && err.status === 403) {
@@ -86,6 +97,7 @@ try {
 
 const totalCount = leadsPage?.count ?? 0;
 const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+const activeTotal = statusCounts ? activeCount(statusCounts.by_status, statusCounts.all) : 0;
 
 function pageHref(targetPage: number): string {
   const next = new URLSearchParams(params);
@@ -121,16 +133,14 @@ const pageTitle = myLeads ? 'My Leads' : 'Leads';
               {pageTitle}
             </h1>
             <p class="mt-1 text-sm text-ink-500 dark:text-ink-300">
-              {scopeLabel} · {totalCount} leads in scope
+              {scopeLabel} · {activeTotal} active leads in scope
             </p>
           </div>
         </div>
 
         <div class="mb-4 flex flex-wrap gap-2 rounded-md border border-ink-100 bg-white p-3 dark:border-ink-700 dark:bg-ink-800">
           {STATUS_BUCKETS.map((bucket) => {
-            const count = bucket.value
-              ? (statusCounts?.by_status[bucket.value] ?? 0)
-              : (statusCounts?.all ?? 0);
+            const count = bucket.value ? (statusCounts?.by_status[bucket.value] ?? 0) : activeTotal;
             const active = (statusParam ?? '') === bucket.value;
             return (
               <a
@@ -228,6 +238,29 @@ const pageTitle = myLeads ? 'My Leads' : 'Leads';
               ))}
             </select>
           </div>
+
+          {!myLeads && (
+            <div class="flex flex-col gap-1">
+              <label
+                for="reviewing_officer"
+                class="text-xs font-medium text-ink-500 dark:text-ink-300"
+              >
+                Reviewing Officer
+              </label>
+              <select
+                id="reviewing_officer"
+                name="reviewing_officer"
+                class="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
+              >
+                <option value="">All reviewing officers</option>
+                {reviewingOfficerOptions.map((o) => (
+                  <option value={o.id} selected={params.get('reviewing_officer') === o.id}>
+                    {o.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div class="flex flex-col gap-1">
             <label for="source" class="text-xs font-medium text-ink-500 dark:text-ink-300">
