@@ -1,0 +1,34 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import BranchesTab from '../components/BranchesTab';
+import { getBranches } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { Branch } from '../types';
+
+const { user } = Astro.locals;
+
+let branches: Branch[] = [];
+let forbidden = false;
+try {
+  branches = await getBranches(Astro.locals.accessToken);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else {
+    throw err;
+  }
+}
+
+const canManage = user.permissions.includes('manage_branches');
+---
+
+<AppLayout title="Branch Network">
+  {
+    forbidden ? (
+      <NotAuthorized message="You don't have permission to view branches." />
+    ) : (
+      <BranchesTab initialBranches={branches} canManage={canManage} client:load />
+    )
+  }
+</AppLayout>
