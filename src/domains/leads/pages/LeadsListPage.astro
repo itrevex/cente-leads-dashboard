@@ -180,7 +180,7 @@ const pageTitle = myLeads ? 'My Leads' : 'Leads';
               id="search"
               name="search"
               type="text"
-              placeholder="ID, applicant, NIN"
+              placeholder="ID, applicant, phone"
               value={params.get('search') ?? ''}
               class="w-56 rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
             />
@@ -361,7 +361,7 @@ const pageTitle = myLeads ? 'My Leads' : 'Leads';
                           <p class="font-medium text-ink-700 dark:text-ink-50">
                             {lead.applicant_name}
                           </p>
-                          <p class="text-xs text-ink-400">{lead.applicant_nin}</p>
+                          <p class="text-xs text-ink-400">{lead.applicant_phone}</p>
                         </div>
                       </div>
                     </td>

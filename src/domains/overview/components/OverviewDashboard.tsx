@@ -137,7 +137,7 @@ export default function OverviewDashboard({ report, firstName, scopeLabel, today
                           <p className="font-medium text-ink-700 dark:text-ink-50">
                             {lead.applicant_name}
                           </p>
-                          <p className="text-xs text-ink-400">{lead.applicant_nin}</p>
+                          <p className="text-xs text-ink-400">{lead.applicant_phone}</p>
                         </div>
                       </div>
                     </td>

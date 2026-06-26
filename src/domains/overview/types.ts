@@ -2,6 +2,7 @@ export interface RecentActivityItem {
   id: string;
   applicant_name: string;
   applicant_nin: string;
+  applicant_phone: string;
   initiation_channel: 'agent' | 'branch';
   cooperative_name: string | null;
   branch_name: string;

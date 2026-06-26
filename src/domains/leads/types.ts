@@ -23,6 +23,7 @@ export interface Lead {
   decline_reason: string;
   applicant_name: string;
   applicant_nin: string;
+  applicant_phone: string;
   submitted_at: string | null;
   decided_at: string | null;
   created_at: string;
