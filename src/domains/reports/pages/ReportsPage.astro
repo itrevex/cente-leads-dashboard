@@ -1,0 +1,30 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import ReportsTab from '../components/ReportsTab';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import { getLeadFunnelReport } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { LeadFunnelReport } from '../types';
+
+let funnel: LeadFunnelReport | null = null;
+let forbidden = false;
+try {
+  funnel = await getLeadFunnelReport(Astro.locals.accessToken);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else {
+    throw err;
+  }
+}
+---
+
+<AppLayout title="Reports">
+  {
+    forbidden || !funnel ? (
+      <NotAuthorized message="You don't have permission to view reports." />
+    ) : (
+      <ReportsTab initialFunnel={funnel} client:load />
+    )
+  }
+</AppLayout>

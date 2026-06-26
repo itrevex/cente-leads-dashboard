@@ -1,0 +1,30 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import AuditLogTab from '../components/AuditLogTab';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import { getAuditEvents } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { AuditEvent } from '../types';
+
+let events: AuditEvent[] = [];
+let forbidden = false;
+try {
+  events = await getAuditEvents(Astro.locals.accessToken);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else {
+    throw err;
+  }
+}
+---
+
+<AppLayout title="Audit Log">
+  {
+    forbidden ? (
+      <NotAuthorized message="You don't have permission to view the audit log." />
+    ) : (
+      <AuditLogTab initialEvents={events} client:load />
+    )
+  }
+</AppLayout>
