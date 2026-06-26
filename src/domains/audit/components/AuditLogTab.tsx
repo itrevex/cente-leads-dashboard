@@ -126,7 +126,7 @@ export default function AuditLogTab({ initialEvents }: Props) {
                 <th className="px-2 py-2 font-medium">User</th>
                 <th className="px-2 py-2 font-medium">Action</th>
                 <th className="px-2 py-2 font-medium">Subject</th>
-                <th className="px-5 py-2 font-medium">Source</th>
+                <th className="px-5 py-2 font-medium">IP / device</th>
               </tr>
             </thead>
             <tbody>
@@ -172,11 +172,18 @@ export default function AuditLogTab({ initialEvents }: Props) {
                     </code>
                   </td>
                   <td className="px-2 py-3 text-ink-500 dark:text-ink-300">
-                    {event.entity_type}:{event.entity_id.slice(0, 8)}
+                    {event.subject}
                     {event.reason && <span className="text-ink-400"> · {event.reason}</span>}
                   </td>
-                  <td className="px-5 py-3 text-sm capitalize text-ink-500 dark:text-ink-300">
-                    {event.source_surface}
+                  <td className="px-5 py-3 font-mono text-xs text-ink-400">
+                    {event.ip_address ? (
+                      <>
+                        {event.ip_address}
+                        {event.device_label && ` · ${event.device_label}`}
+                      </>
+                    ) : (
+                      <span className="capitalize text-ink-400">{event.source_surface}</span>
+                    )}
                   </td>
                 </tr>
               ))}

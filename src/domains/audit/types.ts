@@ -7,6 +7,8 @@ export interface AuditEvent {
   actor_role: string;
   entity_type: string;
   entity_id: string;
+  entity_label: string;
+  subject: string;
   action: string;
   from_state: string;
   to_state: string;
@@ -14,6 +16,8 @@ export interface AuditEvent {
   payload: Record<string, unknown>;
   occurred_at: string;
   source_surface: SourceSurface;
+  ip_address: string | null;
+  device_label: string;
 }
 
 export interface PaginatedResponse<T> {
