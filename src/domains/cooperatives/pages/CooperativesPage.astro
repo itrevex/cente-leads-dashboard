@@ -1,0 +1,43 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import CooperativesTab from '../components/CooperativesTab';
+import { getCooperatives, getBranchOptions } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { Cooperative, BranchOption } from '../types';
+
+const { user } = Astro.locals;
+
+let cooperatives: Cooperative[] = [];
+let branchOptions: BranchOption[] = [];
+let forbidden = false;
+try {
+  [cooperatives, branchOptions] = await Promise.all([
+    getCooperatives(Astro.locals.accessToken),
+    getBranchOptions(Astro.locals.accessToken),
+  ]);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else {
+    throw err;
+  }
+}
+
+const canManage = user.permissions.includes('manage_agents');
+---
+
+<AppLayout title="Cooperatives">
+  {
+    forbidden ? (
+      <NotAuthorized message="You don't have permission to view cooperatives." />
+    ) : (
+      <CooperativesTab
+        initialCooperatives={cooperatives}
+        branchOptions={branchOptions}
+        canManage={canManage}
+        client:load
+      />
+    )
+  }
+</AppLayout>

@@ -1,0 +1,46 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import AgentsTab from '../components/AgentsTab';
+import { getAgents, getBranchOptions, getCooperativeOptions } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { Agent, BranchOption, CooperativeOption } from '../types';
+
+const { user } = Astro.locals;
+
+let agents: Agent[] = [];
+let branchOptions: BranchOption[] = [];
+let cooperativeOptions: CooperativeOption[] = [];
+let forbidden = false;
+try {
+  [agents, branchOptions, cooperativeOptions] = await Promise.all([
+    getAgents(Astro.locals.accessToken),
+    getBranchOptions(Astro.locals.accessToken),
+    getCooperativeOptions(Astro.locals.accessToken),
+  ]);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else {
+    throw err;
+  }
+}
+
+const canManage = user.permissions.includes('manage_agents');
+---
+
+<AppLayout title="Agents">
+  {
+    forbidden ? (
+      <NotAuthorized message="You don't have permission to view agents." />
+    ) : (
+      <AgentsTab
+        initialAgents={agents}
+        branchOptions={branchOptions}
+        cooperativeOptions={cooperativeOptions}
+        canManage={canManage}
+        client:load
+      />
+    )
+  }
+</AppLayout>
