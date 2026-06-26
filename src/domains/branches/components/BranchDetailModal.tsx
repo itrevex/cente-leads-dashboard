@@ -16,7 +16,7 @@ export default function BranchDetailModal({ branch, onClose }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-md border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800"
+        className="w-full max-w-sm rounded-md border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800"
       >
         <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4 dark:border-ink-700">
           <div>

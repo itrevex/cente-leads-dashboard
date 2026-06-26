@@ -6,7 +6,25 @@ interface Props {
   currentPath: string;
 }
 
+// The longest matching href wins, so a detail route like /leads/mine
+// highlights "My Leads" instead of also lighting up the broader /leads
+// "Leads" item it would otherwise prefix-match.
+function bestMatchId(sections: NavSection[], currentPath: string): string | null {
+  let bestId: string | null = null;
+  let bestLength = -1;
+  for (const item of sections.flatMap((s) => s.items)) {
+    const matches =
+      currentPath === item.href || (item.href !== '/' && currentPath.startsWith(`${item.href}/`));
+    if (matches && item.href.length > bestLength) {
+      bestId = item.id;
+      bestLength = item.href.length;
+    }
+  }
+  return bestId;
+}
+
 export default function SidebarNav({ sections, currentPath }: Props) {
+  const activeId = bestMatchId(sections, currentPath);
   return (
     <nav className="flex flex-col gap-5">
       {sections.map((section) => (
@@ -17,9 +35,7 @@ export default function SidebarNav({ sections, currentPath }: Props) {
           <ul className="flex flex-col gap-0.5">
             {section.items.map((item) => {
               const Icon = NAV_ICONS[item.icon];
-              const active =
-                currentPath === item.href ||
-                (item.href !== '/' && currentPath.startsWith(`${item.href}/`));
+              const active = item.id === activeId;
               return (
                 <li key={item.id} className="relative">
                   {active && (
@@ -34,7 +50,7 @@ export default function SidebarNav({ sections, currentPath }: Props) {
                     <span className="flex-1">{item.label}</span>
                     {item.count != null && (
                       <span
-                        className={`rounded-pill px-1.5 py-0.5 text-[11px] font-semibold ${
+                        className={`inline-flex h-5 min-w-5 items-center justify-center rounded-pill px-1.5 text-[11px] font-semibold leading-none ${
                           item.alert
                             ? 'bg-cente-red-100 text-cente-red-700 dark:bg-cente-red-700/20 dark:text-cente-red-500'
                             : 'bg-ink-100 text-ink-500 dark:bg-ink-700 dark:text-ink-300'
