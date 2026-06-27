@@ -5,7 +5,6 @@ import { COOPERATIVE_TYPE_LABELS } from '../presentation';
 import Badge from '../../../shared/components/Badge';
 import Pagination from '../../../shared/components/Pagination';
 import CooperativeFormModal from './CooperativeFormModal';
-import CooperativeMembersModal from './CooperativeMembersModal';
 
 const PAGE_SIZE = 10;
 
@@ -25,7 +24,6 @@ function branchNames(coop: Cooperative, branchOptions: BranchOption[]): string {
 export default function CooperativesTab({ initialCooperatives, branchOptions, canManage }: Props) {
   const [cooperatives, setCooperatives] = useState(initialCooperatives);
   const [editing, setEditing] = useState<Cooperative | null>(null);
-  const [viewingMembers, setViewingMembers] = useState<Cooperative | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -130,12 +128,12 @@ export default function CooperativesTab({ initialCooperatives, branchOptions, ca
                         Edit
                       </button>
                     )}
-                    <button
-                      onClick={() => setViewingMembers(coop)}
+                    <a
+                      href={`/cooperatives/${coop.id}/members`}
                       className="cursor-pointer rounded-pill border border-ink-200 px-3 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-700/40"
                     >
                       View members
-                    </button>
+                    </a>
                   </div>
                 </td>
               </tr>
@@ -165,12 +163,6 @@ export default function CooperativesTab({ initialCooperatives, branchOptions, ca
           branchOptions={branchOptions}
           onClose={() => setShowNew(false)}
           onSaved={handleCreated}
-        />
-      )}
-      {viewingMembers && (
-        <CooperativeMembersModal
-          cooperative={viewingMembers}
-          onClose={() => setViewingMembers(null)}
         />
       )}
     </div>

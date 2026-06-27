@@ -10,6 +10,10 @@ export async function getCooperatives(accessToken: string): Promise<Cooperative[
   return page.results;
 }
 
+export function getCooperative(accessToken: string, id: string): Promise<Cooperative> {
+  return request<Cooperative>(`/cooperatives/${id}/`, { method: 'GET' }, accessToken);
+}
+
 export async function getBranchOptions(accessToken: string): Promise<BranchOption[]> {
   const page = await request<PaginatedResponse<BranchOption>>(
     '/branches/?limit=200',

@@ -1,0 +1,42 @@
+---
+import AppLayout from '../../../shell/AppLayout.astro';
+import NotAuthorized from '../../../shell/NotAuthorized.astro';
+import CooperativeMembersApp from '../components/CooperativeMembersPage';
+import { getCooperative, getCooperativeMembers } from '../api';
+import { ApiError } from '../../../shared/api-client';
+import type { Cooperative, CooperativeMember } from '../types';
+
+const { id } = Astro.params;
+
+let cooperative: Cooperative | null = null;
+let members: CooperativeMember[] = [];
+let forbidden = false;
+let notFound = false;
+
+try {
+  [cooperative, members] = await Promise.all([
+    getCooperative(Astro.locals.accessToken, id as string),
+    getCooperativeMembers(Astro.locals.accessToken, id as string),
+  ]);
+} catch (err) {
+  if (err instanceof ApiError && err.status === 403) {
+    forbidden = true;
+  } else if (err instanceof ApiError && err.status === 404) {
+    notFound = true;
+  } else {
+    throw err;
+  }
+}
+---
+
+<AppLayout title="Cooperative Members">
+  {
+    forbidden ? (
+      <NotAuthorized message="You don't have permission to view cooperative members." />
+    ) : notFound || !cooperative ? (
+      <NotAuthorized message="Cooperative not found." />
+    ) : (
+      <CooperativeMembersApp cooperative={cooperative} initialMembers={members} client:load />
+    )
+  }
+</AppLayout>
