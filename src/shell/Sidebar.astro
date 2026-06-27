@@ -47,17 +47,26 @@ const initials = userName
   .toUpperCase();
 ---
 
-<aside class="flex h-full flex-col bg-white dark:bg-ink-800">
-  <div class="flex h-16 shrink-0 items-center border-b border-ink-100 px-5 dark:border-ink-700">
-    <img src="/centenary-bank-logo-wide.png" alt="Centenary Bank" class="h-9 w-auto" />
+<aside
+  class="flex h-full flex-col border-r border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800"
+>
+  <div
+    class="flex h-16 shrink-0 items-center gap-2.5 border-b border-ink-100 px-5 dark:border-ink-700"
+  >
+    <img src="/cente-leads-icon.png" alt="Cente Leads" class="h-9 w-9 rounded-[10px]" />
+    <div class="flex flex-col">
+      <strong
+        class="text-[15px] font-bold leading-none text-cente-blue-600 dark:text-cente-blue-300"
+        >Cente Leads</strong
+      >
+      <span
+        class="mt-1 text-[10px] font-semibold uppercase leading-none tracking-[0.12em] text-ink-400"
+        >Centenary Bank</span
+      >
+    </div>
   </div>
 
-  <div class="px-5 py-3">
-    <strong
-      class="block text-[15px] font-bold leading-tight text-cente-blue-600 dark:text-cente-blue-300"
-    >
-      Cente Leads
-    </strong>
+  <div class="px-5 pt-2 pb-1">
     <span class="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-400"
       >Operations Dashboard</span
     >
