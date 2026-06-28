@@ -110,8 +110,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
           className="mb-4 flex flex-wrap items-end gap-3 rounded-md border border-ink-100 bg-white p-4 dark:border-ink-700 dark:bg-ink-800"
         >
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Code</label>
+            <label
+              htmlFor="product-create-code"
+              className="text-xs font-medium text-ink-500 dark:text-ink-300"
+            >
+              Code
+            </label>
             <input
+              id="product-create-code"
               required
               value={form.code}
               onChange={(e) => setForm({ ...form, code: e.target.value })}
@@ -119,8 +125,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Name</label>
+            <label
+              htmlFor="product-create-name"
+              className="text-xs font-medium text-ink-500 dark:text-ink-300"
+            >
+              Name
+            </label>
             <input
+              id="product-create-name"
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -128,8 +140,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Segment</label>
+            <label
+              htmlFor="product-create-segment"
+              className="text-xs font-medium text-ink-500 dark:text-ink-300"
+            >
+              Segment
+            </label>
             <select
+              id="product-create-segment"
               value={form.segment}
               onChange={(e) => setForm({ ...form, segment: e.target.value as LoanProductSegment })}
               className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
@@ -142,10 +160,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+            <label
+              htmlFor="product-create-min-amount"
+              className="text-xs font-medium text-ink-500 dark:text-ink-300"
+            >
               Min amount (UGX)
             </label>
             <input
+              id="product-create-min-amount"
               type="number"
               required
               value={form.min_amount}
@@ -154,10 +176,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+            <label
+              htmlFor="product-create-max-amount"
+              className="text-xs font-medium text-ink-500 dark:text-ink-300"
+            >
               Max amount (UGX)
             </label>
             <input
+              id="product-create-max-amount"
               type="number"
               required
               value={form.max_amount}
@@ -166,10 +192,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+            <label
+              htmlFor="product-create-interest-rate"
+              className="text-xs font-medium text-ink-500 dark:text-ink-300"
+            >
               Interest rate (bps)
             </label>
             <input
+              id="product-create-interest-rate"
               type="number"
               required
               value={form.interest_rate_bps}
@@ -178,10 +208,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+            <label
+              htmlFor="product-create-min-term"
+              className="text-xs font-medium text-ink-500 dark:text-ink-300"
+            >
               Min term (mo)
             </label>
             <input
+              id="product-create-min-term"
               type="number"
               required
               value={form.min_term_months}
@@ -190,10 +224,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+            <label
+              htmlFor="product-create-max-term"
+              className="text-xs font-medium text-ink-500 dark:text-ink-300"
+            >
               Max term (mo)
             </label>
             <input
+              id="product-create-max-term"
               type="number"
               required
               value={form.max_term_months}

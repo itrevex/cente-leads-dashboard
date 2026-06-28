@@ -52,7 +52,7 @@ export default function VersionHistoryModal({ productId, onClose }: Props) {
       >
         <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4 dark:border-ink-700">
           <h3 className="text-sm font-semibold text-ink-700 dark:text-ink-50">Version history</h3>
-          <button onClick={onClose} className="text-ink-400 hover:text-ink-700">
+          <button aria-label="Close" onClick={onClose} className="text-ink-400 hover:text-ink-700">
             <X size={16} />
           </button>
         </div>

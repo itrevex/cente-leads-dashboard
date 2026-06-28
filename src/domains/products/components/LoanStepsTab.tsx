@@ -227,12 +227,14 @@ export default function LoanStepsTab({
                     <div className="flex gap-2">
                       <button
                         onClick={() => startEdit(step)}
+                        aria-label={`Edit step ${step.name}`}
                         className="text-ink-400 hover:text-ink-700"
                       >
                         <Pencil size={15} />
                       </button>
                       <button
                         onClick={() => handleDelete(step.id)}
+                        aria-label={`Delete step ${step.name}`}
                         className="text-ink-400 hover:text-cente-red-600"
                       >
                         <Trash2 size={15} />
@@ -277,8 +279,14 @@ function StepFormRow({
   return (
     <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3 px-5 py-4">
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Name</label>
+        <label
+          htmlFor="step-form-name"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Name
+        </label>
         <input
+          id="step-form-name"
           required
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -286,8 +294,14 @@ function StepFormRow({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Performed by</label>
+        <label
+          htmlFor="step-form-performed-by"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Performed by
+        </label>
         <select
+          id="step-form-performed-by"
           value={form.performed_by}
           onChange={(e) => setForm({ ...form, performed_by: e.target.value as StepPerformerRole })}
           className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
@@ -300,8 +314,14 @@ function StepFormRow({
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">SLA (hours)</label>
+        <label
+          htmlFor="step-form-sla-hours"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          SLA (hours)
+        </label>
         <input
+          id="step-form-sla-hours"
           type="number"
           required
           value={form.sla_hours}
@@ -310,8 +330,14 @@ function StepFormRow({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Icon</label>
+        <label
+          htmlFor="step-form-icon"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Icon
+        </label>
         <select
+          id="step-form-icon"
           value={form.icon}
           onChange={(e) => setForm({ ...form, icon: e.target.value as StepIcon })}
           className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
@@ -324,8 +350,14 @@ function StepFormRow({
         </select>
       </div>
       <div className="flex flex-1 flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Description</label>
+        <label
+          htmlFor="step-form-description"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Description
+        </label>
         <input
+          id="step-form-description"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"

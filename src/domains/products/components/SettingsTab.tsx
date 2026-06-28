@@ -68,8 +68,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
     >
       <fieldset disabled={!canManage} className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Name</label>
+          <label
+            htmlFor="product-settings-name"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
+            Name
+          </label>
           <input
+            id="product-settings-name"
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -77,8 +83,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Code</label>
+          <label
+            htmlFor="product-settings-code"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
+            Code
+          </label>
           <input
+            id="product-settings-code"
             required
             value={form.code}
             onChange={(e) => setForm({ ...form, code: e.target.value })}
@@ -86,8 +98,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Segment</label>
+          <label
+            htmlFor="product-settings-segment"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
+            Segment
+          </label>
           <select
+            id="product-settings-segment"
             value={form.segment}
             onChange={(e) => setForm({ ...form, segment: e.target.value as LoanProductSegment })}
             className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
@@ -118,8 +136,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           </label>
         </div>
         <div className="col-span-2 flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Description</label>
+          <label
+            htmlFor="product-settings-description"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
+            Description
+          </label>
           <textarea
+            id="product-settings-description"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={2}
@@ -127,10 +151,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+          <label
+            htmlFor="product-settings-min-amount"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
             Min amount (UGX)
           </label>
           <input
+            id="product-settings-min-amount"
             type="number"
             required
             value={form.min_amount}
@@ -139,10 +167,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+          <label
+            htmlFor="product-settings-max-amount"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
             Max amount (UGX)
           </label>
           <input
+            id="product-settings-max-amount"
             type="number"
             required
             value={form.max_amount}
@@ -151,10 +183,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+          <label
+            htmlFor="product-settings-min-term"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
             Min term (months)
           </label>
           <input
+            id="product-settings-min-term"
             type="number"
             required
             value={form.min_term_months}
@@ -163,10 +199,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+          <label
+            htmlFor="product-settings-max-term"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
             Max term (months)
           </label>
           <input
+            id="product-settings-max-term"
             type="number"
             required
             value={form.max_term_months}
@@ -175,10 +215,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+          <label
+            htmlFor="product-settings-interest-rate"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
             Interest rate (bps)
           </label>
           <input
+            id="product-settings-interest-rate"
             type="number"
             required
             value={form.interest_rate_bps}
@@ -187,10 +231,14 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+          <label
+            htmlFor="product-settings-processing-fee"
+            className="text-xs font-medium text-ink-500 dark:text-ink-300"
+          >
             Processing fee (bps)
           </label>
           <input
+            id="product-settings-processing-fee"
             type="number"
             required
             value={form.processing_fee_bps}

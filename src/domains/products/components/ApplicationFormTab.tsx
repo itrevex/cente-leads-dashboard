@@ -264,12 +264,14 @@ export default function ApplicationFormTab({
                             <div className="flex gap-2">
                               <button
                                 onClick={() => startEdit(step.id, field)}
+                                aria-label={`Edit field ${field.label}`}
                                 className="text-ink-400 hover:text-ink-700"
                               >
                                 <Pencil size={15} />
                               </button>
                               <button
                                 onClick={() => handleDelete(field.id)}
+                                aria-label={`Delete field ${field.label}`}
                                 className="text-ink-400 hover:text-cente-red-600"
                               >
                                 <Trash2 size={15} />
@@ -353,8 +355,14 @@ function FieldFormRow({
   return (
     <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3 px-5 py-4">
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Key</label>
+        <label
+          htmlFor="field-form-key"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Key
+        </label>
         <input
+          id="field-form-key"
           required
           value={form.key}
           onChange={(e) => setForm({ ...form, key: e.target.value })}
@@ -362,8 +370,14 @@ function FieldFormRow({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Label</label>
+        <label
+          htmlFor="field-form-label"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Label
+        </label>
         <input
+          id="field-form-label"
           required
           value={form.label}
           onChange={(e) => setForm({ ...form, label: e.target.value })}
@@ -371,8 +385,14 @@ function FieldFormRow({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Type</label>
+        <label
+          htmlFor="field-form-type"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Type
+        </label>
         <select
+          id="field-form-type"
           value={form.field_type}
           onChange={(e) => setForm({ ...form, field_type: e.target.value as FormFieldType })}
           className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"

@@ -176,12 +176,14 @@ export default function DocumentsTab({
                     <div className="flex gap-2">
                       <button
                         onClick={() => startEdit(doc)}
+                        aria-label={`Edit document ${doc.name}`}
                         className="text-ink-400 hover:text-ink-700"
                       >
                         <Pencil size={15} />
                       </button>
                       <button
                         onClick={() => handleDelete(doc.id)}
+                        aria-label={`Delete document ${doc.name}`}
                         className="text-ink-400 hover:text-cente-red-600"
                       >
                         <Trash2 size={15} />
@@ -226,8 +228,14 @@ function DocFormRow({
   return (
     <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3 px-5 py-4">
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Name</label>
+        <label
+          htmlFor="document-form-name"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Name
+        </label>
         <input
+          id="document-form-name"
           required
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -235,10 +243,14 @@ function DocFormRow({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">
+        <label
+          htmlFor="document-form-accepted-format"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
           Accepted format
         </label>
         <select
+          id="document-form-accepted-format"
           value={form.accepted_format}
           onChange={(e) =>
             setForm({ ...form, accepted_format: e.target.value as DocumentAcceptedFormat })
@@ -253,8 +265,14 @@ function DocFormRow({
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Order</label>
+        <label
+          htmlFor="document-form-order"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Order
+        </label>
         <input
+          id="document-form-order"
           type="number"
           required
           value={form.order}
@@ -271,8 +289,14 @@ function DocFormRow({
         Required
       </label>
       <div className="flex flex-1 flex-col gap-1">
-        <label className="text-xs font-medium text-ink-500 dark:text-ink-300">Description</label>
+        <label
+          htmlFor="document-form-description"
+          className="text-xs font-medium text-ink-500 dark:text-ink-300"
+        >
+          Description
+        </label>
         <input
+          id="document-form-description"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           className="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
