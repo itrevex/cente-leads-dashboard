@@ -4,6 +4,7 @@ dist/
 coverage/
 playwright-report/
 test-results/
+.nyc_merged/
 playwright/.auth/
 # generated types
 .astro/
@@ -28,3 +29,4 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
