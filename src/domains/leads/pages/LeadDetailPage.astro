@@ -232,12 +232,15 @@ const statusMeta = lead
                     .slice()
                     .reverse()
                     .map((event) => (
-                      <div class="flex items-center gap-2 text-ink-700 dark:text-ink-50">
-                        <span class="font-semibold text-success">✓</span>
-                        <span class="flex-1">
-                          {AUDIT_ACTION_LABELS[event.action] ?? event.action}
-                        </span>
-                        <span class="text-ink-400">{event.occurred_at.slice(11, 16)}</span>
+                      <div class="space-y-0.5">
+                        <div class="flex items-center gap-2 text-ink-700 dark:text-ink-50">
+                          <span class="font-semibold text-success">✓</span>
+                          <span class="flex-1">
+                            {AUDIT_ACTION_LABELS[event.action] ?? event.action}
+                          </span>
+                          <span class="text-ink-400">{event.occurred_at.slice(11, 16)}</span>
+                        </div>
+                        {event.reason ? <p class="pl-5 text-ink-400">{event.reason}</p> : null}
                       </div>
                     ))}
                 </div>

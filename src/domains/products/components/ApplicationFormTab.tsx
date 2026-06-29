@@ -1,6 +1,12 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, GripVertical, PlusCircle } from 'lucide-react';
-import type { LoanProduct, LeadFormSchema, LeadFormFieldNested, FormFieldType } from '../types';
+import { Plus, Pencil, Trash2, GripVertical, PlusCircle, X } from 'lucide-react';
+import type {
+  LoanProduct,
+  LeadFormSchema,
+  LeadFormFieldNested,
+  FormFieldType,
+  FieldOption,
+} from '../types';
 import { FIELD_TYPE_LABELS } from '../presentation';
 import { createField, updateField, deleteField, ProductsApiError } from '../client';
 import { computeReorder, applyReorder } from '../reorder';
@@ -35,6 +41,7 @@ type FieldForm = {
   field_type: FormFieldType;
   required: boolean;
   order: number;
+  options: FieldOption[];
 };
 
 export default function ApplicationFormTab({
@@ -63,6 +70,7 @@ export default function ApplicationFormTab({
       field_type: fieldType,
       required: false,
       order: (step?.form_fields.length ?? 0) + 1,
+      options: [],
     });
     setActiveStepId(stepId);
     setEditingId('new');
@@ -104,6 +112,7 @@ export default function ApplicationFormTab({
       field_type: field.field_type,
       required: field.required,
       order: field.order,
+      options: field.options ?? [],
     });
     setActiveStepId(stepId);
     setEditingId(field.id);
@@ -115,11 +124,12 @@ export default function ApplicationFormTab({
     if (!schema || !form) return;
     setBusy(true);
     setError(null);
+    const payload = { ...form, options: form.field_type === 'dropdown' ? form.options : null };
     try {
       if (editingId === 'new') {
-        await createField(schema.id, form);
+        await createField(schema.id, payload);
       } else if (editingId) {
-        await updateField(schema.id, editingId, form);
+        await updateField(schema.id, editingId, payload);
       }
       await onSchemaRefresh(schema.id);
       setEditingId(null);
@@ -257,6 +267,8 @@ export default function ApplicationFormTab({
                               </p>
                               <p className="text-xs text-ink-400">
                                 {field.key} · {FIELD_TYPE_LABELS[field.field_type]}
+                                {field.field_type === 'dropdown' &&
+                                  ` · ${field.options?.length ?? 0} choices`}
                               </p>
                             </div>
                           </div>
@@ -412,6 +424,12 @@ function FieldFormRow({
         />
         Required
       </label>
+      {form.field_type === 'dropdown' && (
+        <DropdownOptionsEditor
+          options={form.options}
+          onChange={(options) => setForm({ ...form, options })}
+        />
+      )}
       <div className="flex gap-2">
         <button
           type="submit"
@@ -430,5 +448,61 @@ function FieldFormRow({
       </div>
       {error && <p className="w-full text-xs text-cente-red-600">{error}</p>}
     </form>
+  );
+}
+
+function DropdownOptionsEditor({
+  options,
+  onChange,
+}: {
+  options: FieldOption[];
+  onChange: (options: FieldOption[]) => void;
+}) {
+  function updateOption(index: number, key: keyof FieldOption, value: string) {
+    onChange(options.map((opt, i) => (i === index ? { ...opt, [key]: value } : opt)));
+  }
+
+  function removeOption(index: number) {
+    onChange(options.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-2 rounded-sm border border-ink-100 bg-ink-50/60 p-3 dark:border-ink-700 dark:bg-ink-900">
+      <p className="text-xs font-medium text-ink-500 dark:text-ink-300">Choices</p>
+      {options.map((opt, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <input
+            placeholder="Value"
+            value={opt.value}
+            onChange={(e) => updateOption(index, 'value', e.target.value)}
+            className="w-32 rounded-sm border border-ink-200 px-2 py-1.5 text-sm dark:border-ink-600 dark:bg-ink-800"
+          />
+          <input
+            placeholder="Label"
+            value={opt.label}
+            onChange={(e) => updateOption(index, 'label', e.target.value)}
+            className="w-44 rounded-sm border border-ink-200 px-2 py-1.5 text-sm dark:border-ink-600 dark:bg-ink-800"
+          />
+          <button
+            type="button"
+            onClick={() => removeOption(index)}
+            aria-label={`Remove choice ${index + 1}`}
+            className="text-ink-400 hover:text-cente-red-600"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => onChange([...options, { value: '', label: '' }])}
+        className="flex items-center gap-1 self-start text-xs font-medium text-cente-blue-600 hover:underline"
+      >
+        <Plus size={12} /> Add choice
+      </button>
+      {options.length === 0 && (
+        <p className="text-xs text-cente-red-600">At least one choice is required.</p>
+      )}
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 ---
-import { Search, Building2, Bell, HelpCircle } from 'lucide-react';
+import { Search, Building2, HelpCircle } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from '../domains/notifications/NotificationBell';
 
 interface Props {
   title: string;
@@ -34,13 +35,7 @@ const { title, branchLabel = 'Head Office · All branches' } = Astro.props;
     {branchLabel}
   </button>
 
-  <button
-    title="Notifications"
-    class="relative flex h-9 w-9 items-center justify-center rounded-sm border border-ink-200 text-ink-500 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800"
-  >
-    <Bell size={18} />
-    <span class="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cente-red-600"></span>
-  </button>
+  <NotificationBell client:load />
 
   <ThemeToggle client:load />
 

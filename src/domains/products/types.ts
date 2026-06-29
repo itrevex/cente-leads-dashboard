@@ -64,6 +64,11 @@ export type DocumentAcceptedFormat =
   | 'pdf_or_excel'
   | 'any_format';
 
+export interface FieldOption {
+  value: string;
+  label: string;
+}
+
 export interface LeadFormFieldNested {
   id: string;
   key: string;
@@ -71,6 +76,7 @@ export interface LeadFormFieldNested {
   field_type: FormFieldType;
   required: boolean;
   order: number;
+  options: FieldOption[] | null;
 }
 
 export interface LeadFormStep {
@@ -96,6 +102,7 @@ export interface LeadFormField {
   field_type: FormFieldType;
   required: boolean;
   order: number;
+  options: FieldOption[] | null;
   created_at: string;
   updated_at: string;
 }
