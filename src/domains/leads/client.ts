@@ -64,3 +64,28 @@ export function addComment(leadId: string, body: string, isInternal: boolean): P
     body: JSON.stringify({ body, is_internal: isInternal }),
   });
 }
+
+// ReassignLeadSerializer: at least one of agent_id/reviewing_officer_id
+// must be supplied (ADR-0020/0021) — not a status transition.
+export function reassignLead(
+  leadId: string,
+  payload: { agent_id?: string; reviewing_officer_id?: string },
+): Promise<Lead> {
+  return call(`/api/leads/${leadId}/reassign/`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface ReassignCandidate {
+  id: string;
+  full_name: string;
+  role: string;
+}
+
+export function getReassignCandidates(): Promise<{
+  agents: ReassignCandidate[];
+  reviewing_officers: ReassignCandidate[];
+}> {
+  return call(`/api/leads/reassign-candidates/`);
+}

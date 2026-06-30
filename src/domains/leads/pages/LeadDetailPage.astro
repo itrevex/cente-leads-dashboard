@@ -23,6 +23,7 @@ import Badge from '../../../shared/components/Badge';
 import Avatar from '../../../shared/components/Avatar';
 import LeadDecisionActions from '../components/LeadDecisionActions';
 import AddCommentForm from '../components/AddCommentForm';
+import ReassignLead from '../components/ReassignLead';
 
 const { id } = Astro.params;
 const accessToken = Astro.locals.accessToken;
@@ -85,6 +86,15 @@ const statusMeta = lead
 // and the head of loans may act on a lead under bank review.
 const canDecide =
   !!user && ['loan_officer', 'head_of_loans'].includes(user.role) && lead?.status === 'review';
+
+// Mirrors apps.leads.views.LeadReassignView.allowed_roles (ADR-0020/0021).
+// Available on any non-terminal lead, unlike canDecide which is review-only.
+const TERMINAL_STATUSES = ['recommended', 'declined'];
+const canReassign =
+  !!user &&
+  ['head_of_loans', 'compliance_officer', 'mcp_officer', 'system_admin'].includes(user.role) &&
+  !!lead &&
+  !TERMINAL_STATUSES.includes(lead.status);
 ---
 
 <AppLayout title="Lead Detail">
@@ -149,7 +159,17 @@ const canDecide =
               </div>
             </div>
           </div>
-          <Badge label={statusMeta.label} color={statusMeta.color} />
+          <div class="flex items-center gap-3">
+            {canReassign && (
+              <ReassignLead
+                leadId={lead.id}
+                assignedAgentId={lead.assigned_agent}
+                reviewingOfficerId={lead.reviewing_officer}
+                client:load
+              />
+            )}
+            <Badge label={statusMeta.label} color={statusMeta.color} />
+          </div>
         </div>
 
         {canDecide && (
@@ -173,6 +193,12 @@ const canDecide =
                 <dt class="text-ink-400">Captured by</dt>
                 <dd class="text-right text-ink-700 dark:text-ink-50">
                   {lead.assigned_agent_name ?? 'Branch walk-in'}
+                </dd>
+              </div>
+              <div class="flex justify-between gap-3">
+                <dt class="text-ink-400">Reviewing officer</dt>
+                <dd class="text-right text-ink-700 dark:text-ink-50">
+                  {lead.reviewing_officer_name ?? 'Unassigned'}
                 </dd>
               </div>
               <div class="flex justify-between gap-3">
