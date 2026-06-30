@@ -21,10 +21,13 @@ import {
 } from '../presentation';
 import Badge from '../../../shared/components/Badge';
 import Avatar from '../../../shared/components/Avatar';
+import LeadDecisionActions from '../components/LeadDecisionActions';
+import AddCommentForm from '../components/AddCommentForm';
 
 const { id } = Astro.params;
 const accessToken = Astro.locals.accessToken;
 const activeTab = Astro.url.searchParams.get('tab') ?? 'application';
+const { user } = Astro.locals;
 
 let forbidden = false;
 let notFound = false;
@@ -76,6 +79,12 @@ function tabHref(tab: string): string {
 const statusMeta = lead
   ? (STATUS_META[lead.status] ?? { label: lead.status, color: 'neutral' })
   : null;
+
+// Mirrors apps.leads.views.LeadRequestInfoView/LeadRecommendView/
+// LeadDeclineView/LeadReturnToAgentView allowed_roles — only loan officers
+// and the head of loans may act on a lead under bank review.
+const canDecide =
+  !!user && ['loan_officer', 'head_of_loans'].includes(user.role) && lead?.status === 'review';
 ---
 
 <AppLayout title="Lead Detail">
@@ -143,6 +152,15 @@ const statusMeta = lead
           <Badge label={statusMeta.label} color={statusMeta.color} />
         </div>
 
+        {canDecide && (
+          <div class="mb-6 rounded-md border border-ink-100 bg-white p-4 dark:border-ink-700 dark:bg-ink-800">
+            <h3 class="mb-3 text-sm font-semibold text-ink-700 dark:text-ink-50">
+              Bank Review Decision
+            </h3>
+            <LeadDecisionActions leadId={lead.id} client:load />
+          </div>
+        )}
+
         <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div class="rounded-md border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
             <div class="border-b border-ink-100 px-5 py-3 dark:border-ink-700">
@@ -180,7 +198,11 @@ const statusMeta = lead
             <div class="border-b border-ink-100 px-5 py-3 dark:border-ink-700">
               <h3 class="text-sm font-semibold text-ink-700 dark:text-ink-50">
                 Chair Approval
-                {latestChairApproval ? ` · ${latestChairApproval.decision}` : ' · Pending'}
+                {latestChairApproval
+                  ? ` · ${latestChairApproval.decision}`
+                  : lead.cooperative
+                    ? ' · Pending'
+                    : ' · Not Applicable'}
               </h3>
             </div>
             <div class="p-5 text-sm">
@@ -209,9 +231,14 @@ const statusMeta = lead
                     </div>
                   )}
                 </dl>
-              ) : (
+              ) : lead.cooperative ? (
                 <p class="text-ink-400">
                   Waiting for cooperative chairperson to review and sign with their PIN.
+                </p>
+              ) : (
+                <p class="text-ink-400">
+                  This lead has no cooperative — it skips chair approval and goes straight to bank
+                  review.
                 </p>
               )}
             </div>
@@ -384,6 +411,7 @@ const statusMeta = lead
 
           {activeTab === 'comments' && (
             <div class="space-y-4 p-5">
+              <AddCommentForm leadId={lead.id} client:load />
               {comments.length === 0 ? (
                 <p class="text-sm text-ink-400">No comments yet.</p>
               ) : (
