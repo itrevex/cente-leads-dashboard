@@ -97,6 +97,7 @@ export interface LeadDocument {
   size_bytes: number | null;
   upload_status: 'pending' | 'uploaded' | 'failed';
   download_url: string | null;
+  client_local_id: string | null;
   created_at: string;
 }
 

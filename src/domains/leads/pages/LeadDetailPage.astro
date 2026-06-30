@@ -61,11 +61,23 @@ try {
 }
 
 const fieldLabelByKey = new Map<string, string>();
+const fieldTypeByKey = new Map<string, string>();
 if (formSchema) {
   for (const step of formSchema.steps) {
     for (const field of step.form_fields) {
       fieldLabelByKey.set(field.key, field.label);
+      fieldTypeByKey.set(field.key, field.field_type);
     }
+  }
+}
+
+// file_upload answers hold a local_documents clientLocalId (see mobile's
+// FieldInput/new.tsx file_upload capture flow), not a human-readable value --
+// resolve it against the lead's documents list to link the actual file.
+const documentByClientLocalId = new Map<string, (typeof documents)[number]>();
+for (const doc of documents) {
+  if (doc.client_local_id) {
+    documentByClientLocalId.set(doc.client_local_id, doc);
   }
 }
 
@@ -393,12 +405,39 @@ const canReassign =
                   <p class="text-sm text-ink-400">No form answers recorded.</p>
                 ) : (
                   <dl class="space-y-2 text-sm">
-                    {Object.entries(lead.form_answers).map(([key, value]) => (
-                      <div class="flex justify-between gap-3">
-                        <dt class="text-ink-400">{fieldLabelByKey.get(key) ?? key}</dt>
-                        <dd class="text-right text-ink-700 dark:text-ink-50">{String(value)}</dd>
-                      </div>
-                    ))}
+                    {Object.entries(lead.form_answers).map(([key, value]) => {
+                      const isFileUpload = fieldTypeByKey.get(key) === 'file_upload';
+                      const linkedDoc = isFileUpload
+                        ? documentByClientLocalId.get(String(value))
+                        : undefined;
+                      return (
+                        <div class="flex justify-between gap-3">
+                          <dt class="text-ink-400">{fieldLabelByKey.get(key) ?? key}</dt>
+                          <dd class="text-right text-ink-700 dark:text-ink-50">
+                            {isFileUpload ? (
+                              linkedDoc?.download_url ? (
+                                <a
+                                  href={linkedDoc.download_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  class="text-brand-600 underline"
+                                >
+                                  {DOC_TYPE_LABELS[linkedDoc.doc_type] ?? 'View file'}
+                                </a>
+                              ) : linkedDoc ? (
+                                <span>
+                                  {DOC_TYPE_LABELS[linkedDoc.doc_type] ?? 'File'} (uploading…)
+                                </span>
+                              ) : (
+                                <span class="text-ink-400">Attached on device, not yet synced</span>
+                              )
+                            ) : (
+                              String(value)
+                            )}
+                          </dd>
+                        </div>
+                      );
+                    })}
                   </dl>
                 )}
               </div>
