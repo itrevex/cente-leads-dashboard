@@ -87,6 +87,7 @@ export interface LeadFormStep {
   performed_by: StepPerformerRole;
   sla_hours: number;
   icon: StepIcon;
+  required: boolean;
   order: number;
   form_fields: LeadFormFieldNested[];
   created_at: string;
@@ -119,6 +120,16 @@ export interface LeadFormDocumentRequirement {
   updated_at: string;
 }
 
+export interface LeadFormGpsRequirement {
+  id: string;
+  form_schema: string;
+  label: string;
+  required: boolean;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LeadFormSchema {
   id: string;
   loan_product: string;
@@ -129,6 +140,7 @@ export interface LeadFormSchema {
   created_by: string;
   steps: LeadFormStep[];
   document_requirements: LeadFormDocumentRequirement[];
+  gps_requirements: LeadFormGpsRequirement[];
   created_at: string;
   updated_at: string;
 }

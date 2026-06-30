@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Settings, Workflow, ListChecks, FileText, ArrowLeft, History } from 'lucide-react';
+import { Settings, Workflow, ListChecks, FileText, MapPin, ArrowLeft, History } from 'lucide-react';
 import type { LoanProduct, LeadFormSchema, BranchOption } from '../types';
 import { getFormSchema } from '../client';
 import SettingsTab from './SettingsTab';
 import LoanStepsTab from './LoanStepsTab';
 import ApplicationFormTab from './ApplicationFormTab';
 import DocumentsTab from './DocumentsTab';
+import GpsRequirementsTab from './GpsRequirementsTab';
 import VersionHistoryModal from './VersionHistoryModal';
 
 interface Props {
@@ -15,12 +16,13 @@ interface Props {
   canManage: boolean;
 }
 
-type TabKey = 'settings' | 'steps' | 'form' | 'documents';
+type TabKey = 'settings' | 'steps' | 'form' | 'documents' | 'gps';
 
 const TABS: { key: TabKey; label: string; icon: typeof Settings }[] = [
   { key: 'steps', label: 'Loan Steps', icon: Workflow },
   { key: 'form', label: 'Application Form', icon: ListChecks },
   { key: 'documents', label: 'Documents', icon: FileText },
+  { key: 'gps', label: 'GPS Requirements', icon: MapPin },
   { key: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -126,6 +128,16 @@ export default function ProductConfigApp({
       )}
       {tab === 'documents' && (
         <DocumentsTab
+          product={product}
+          schema={schema}
+          canManage={canManage}
+          isEditable={isEditable}
+          onSchemaChange={setSchema}
+          onSchemaRefresh={refreshSchema}
+        />
+      )}
+      {tab === 'gps' && (
+        <GpsRequirementsTab
           product={product}
           schema={schema}
           canManage={canManage}

@@ -7,6 +7,7 @@ import type {
   LeadFormStep,
   LeadFormField,
   LeadFormDocumentRequirement,
+  LeadFormGpsRequirement,
   PaginatedResponse,
 } from './types';
 
@@ -146,4 +147,29 @@ export function updateDocumentRequirement(
 
 export function deleteDocumentRequirement(schemaId: string, docId: string): Promise<null> {
   return call(`/api/form-schemas/${schemaId}/documents/${docId}`, { method: 'DELETE' });
+}
+
+export function createGpsRequirement(
+  schemaId: string,
+  payload: Partial<LeadFormGpsRequirement>,
+): Promise<LeadFormGpsRequirement> {
+  return call(`/api/form-schemas/${schemaId}/gps-requirements`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateGpsRequirement(
+  schemaId: string,
+  gpsId: string,
+  payload: Partial<LeadFormGpsRequirement>,
+): Promise<LeadFormGpsRequirement> {
+  return call(`/api/form-schemas/${schemaId}/gps-requirements/${gpsId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteGpsRequirement(schemaId: string, gpsId: string): Promise<null> {
+  return call(`/api/form-schemas/${schemaId}/gps-requirements/${gpsId}`, { method: 'DELETE' });
 }
