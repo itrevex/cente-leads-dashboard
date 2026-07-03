@@ -1,5 +1,6 @@
 # build output
 dist/
+.netlify/
 .nyc_output/
 coverage/
 playwright-report/
