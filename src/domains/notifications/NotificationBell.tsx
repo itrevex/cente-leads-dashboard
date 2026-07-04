@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell, Check } from 'lucide-react';
 import { listNotifications, markAllNotificationsRead, markNotificationRead } from './client';
+import { registerForPushNotifications } from './push';
 import { TEMPLATE_LABELS } from './presentation';
 import type { Notification } from './types';
 
@@ -17,6 +18,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     load();
+    registerForPushNotifications().catch(() => undefined);
   }, []);
 
   useEffect(() => {
