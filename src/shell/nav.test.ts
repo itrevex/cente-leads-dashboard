@@ -10,6 +10,7 @@ describe('navForPermissions', () => {
     expect(
       flatIds([
         'view_leads',
+        'view_all_branches',
         'view_branches',
         'view_cooperatives',
         'view_agents',
@@ -34,8 +35,16 @@ describe('navForPermissions', () => {
     );
   });
 
-  it('restricts a view_leads-only user to their own workspace', () => {
-    expect(flatIds(['view_leads'])).toEqual(['overview', 'leads', 'queue-mine']);
+  it('restricts a view_leads-only user to My Leads, without the all-leads queue', () => {
+    expect(flatIds(['view_leads'])).toEqual(['overview', 'queue-mine']);
+  });
+
+  it('shows the all-leads queue only with view_all_branches', () => {
+    expect(flatIds(['view_leads', 'view_all_branches'])).toEqual([
+      'overview',
+      'leads',
+      'queue-mine',
+    ]);
   });
 
   it('omits a section entirely when no items in it are allowed', () => {
@@ -50,7 +59,7 @@ describe('navForPermissions', () => {
 
 describe('withNavCounts', () => {
   it('attaches counts only to items present in the map', () => {
-    const sections = navForPermissions(['view_leads']);
+    const sections = navForPermissions(['view_leads', 'view_all_branches']);
     const withCounts = withNavCounts(sections, { leads: 19, 'queue-mine': 1 });
     const byId = Object.fromEntries(
       withCounts.flatMap((section) => section.items).map((item) => [item.id, item.count]),

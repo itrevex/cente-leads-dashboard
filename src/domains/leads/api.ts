@@ -60,31 +60,45 @@ export function getStatusCounts(
 // Dropdown option sources for the filter bar — fetched with a generous
 // limit since these lists are small (branch/cooperative/agent counts are
 // in the dozens, not paginated in the UI).
-export async function getBranchOptions(accessToken: string): Promise<NamedOption[]> {
-  const page = await request<PaginatedResponse<NamedOption>>(
-    '/branches/?limit=200',
-    { method: 'GET' },
-    accessToken,
-  );
-  return page.results;
+//
+// Their source endpoints are gated on view_agents/view_users, which most
+// lead-viewing roles (loan officer, head of loans, compliance, MCP) do
+// not hold — so a 403 degrades to an empty option list (the leads pages
+// hide the dropdown) instead of blocking the whole page, same as
+// getLeadAuditEvents below.
+async function resultsOrEmptyIfForbidden<T>(
+  fetchPage: Promise<PaginatedResponse<T>>,
+): Promise<T[]> {
+  try {
+    return (await fetchPage).results;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 403) {
+      return [];
+    }
+    throw err;
+  }
 }
 
-export async function getCooperativeOptions(accessToken: string): Promise<NamedOption[]> {
-  const page = await request<PaginatedResponse<NamedOption>>(
-    '/cooperatives/?limit=200',
-    { method: 'GET' },
-    accessToken,
+export function getBranchOptions(accessToken: string): Promise<NamedOption[]> {
+  return resultsOrEmptyIfForbidden(
+    request<PaginatedResponse<NamedOption>>('/branches/?limit=200', { method: 'GET' }, accessToken),
   );
-  return page.results;
 }
 
-export async function getAgentOptions(accessToken: string): Promise<AgentOption[]> {
-  const page = await request<PaginatedResponse<AgentOption>>(
-    '/agents/?limit=200',
-    { method: 'GET' },
-    accessToken,
+export function getCooperativeOptions(accessToken: string): Promise<NamedOption[]> {
+  return resultsOrEmptyIfForbidden(
+    request<PaginatedResponse<NamedOption>>(
+      '/cooperatives/?limit=200',
+      { method: 'GET' },
+      accessToken,
+    ),
   );
-  return page.results;
+}
+
+export function getAgentOptions(accessToken: string): Promise<AgentOption[]> {
+  return resultsOrEmptyIfForbidden(
+    request<PaginatedResponse<AgentOption>>('/agents/?limit=200', { method: 'GET' }, accessToken),
+  );
 }
 
 // Mirrors apps.leads.serializers.REVIEWING_OFFICER_ROLES — only these
@@ -94,16 +108,16 @@ export async function getReviewingOfficerOptions(accessToken: string): Promise<A
   const roles = ['branch_officer', 'loan_officer', 'head_of_loans'];
   const pages = await Promise.all(
     roles.map((role) =>
-      request<PaginatedResponse<AgentOption>>(
-        `/users/?role=${role}&limit=200`,
-        { method: 'GET' },
-        accessToken,
+      resultsOrEmptyIfForbidden(
+        request<PaginatedResponse<AgentOption>>(
+          `/users/?role=${role}&limit=200`,
+          { method: 'GET' },
+          accessToken,
+        ),
       ),
     ),
   );
-  return pages
-    .flatMap((page) => page.results)
-    .sort((a, b) => a.full_name.localeCompare(b.full_name));
+  return pages.flat().sort((a, b) => a.full_name.localeCompare(b.full_name));
 }
 
 export function getLead(accessToken: string, id: string): Promise<Lead> {

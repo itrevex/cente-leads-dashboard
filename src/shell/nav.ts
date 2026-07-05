@@ -19,7 +19,16 @@ export interface NavSection {
 
 const WORKSPACE: NavItem[] = [
   { id: 'overview', label: 'Overview', href: '/', icon: 'layout-dashboard' },
-  { id: 'leads', label: 'Leads', href: '/leads', icon: 'inbox', requiredPermission: 'view_leads' },
+  {
+    id: 'leads',
+    label: 'Leads',
+    href: '/leads',
+    icon: 'inbox',
+    // The all-leads list is the cross-branch HQ queue, so it's gated on
+    // view_all_branches rather than view_leads — branch-restricted roles
+    // (loan officer, branch officer/manager) work out of "My Leads" only.
+    requiredPermission: 'view_all_branches',
+  },
   {
     id: 'queue-mine',
     label: 'My Leads',

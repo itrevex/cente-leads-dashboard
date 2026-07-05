@@ -186,61 +186,73 @@ const pageTitle = myLeads ? 'My Leads' : 'Leads';
             />
           </div>
 
-          <div class="flex flex-col gap-1">
-            <label for="branch" class="text-xs font-medium text-ink-500 dark:text-ink-300">
-              Branch
-            </label>
-            <select
-              id="branch"
-              name="branch"
-              class="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
-            >
-              <option value="">All branches</option>
-              {branchOptions.map((b) => (
-                <option value={b.id} selected={params.get('branch') === b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Option lists come back empty when the role lacks the matching
+              view_* permission (see resultsOrEmptyIfForbidden in ../api) —
+              hide those dropdowns rather than render them with no choices. */}
+          {branchOptions.length > 0 && (
+            <div class="flex flex-col gap-1">
+              <label for="branch" class="text-xs font-medium text-ink-500 dark:text-ink-300">
+                Branch
+              </label>
+              <select
+                id="branch"
+                name="branch"
+                class="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
+              >
+                <option value="">All branches</option>
+                {branchOptions.map((b) => (
+                  <option value={b.id} selected={params.get('branch') === b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div class="flex flex-col gap-1">
-            <label for="cooperative" class="text-xs font-medium text-ink-500 dark:text-ink-300">
-              Cooperative
-            </label>
-            <select
-              id="cooperative"
-              name="cooperative"
-              class="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
-            >
-              <option value="">All cooperatives</option>
-              {cooperativeOptions.map((c) => (
-                <option value={c.id} selected={params.get('cooperative') === c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {cooperativeOptions.length > 0 && (
+            <div class="flex flex-col gap-1">
+              <label for="cooperative" class="text-xs font-medium text-ink-500 dark:text-ink-300">
+                Cooperative
+              </label>
+              <select
+                id="cooperative"
+                name="cooperative"
+                class="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
+              >
+                <option value="">All cooperatives</option>
+                {cooperativeOptions.map((c) => (
+                  <option value={c.id} selected={params.get('cooperative') === c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div class="flex flex-col gap-1">
-            <label for="assigned_agent" class="text-xs font-medium text-ink-500 dark:text-ink-300">
-              Agent
-            </label>
-            <select
-              id="assigned_agent"
-              name="assigned_agent"
-              class="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
-            >
-              <option value="">All agents</option>
-              {agentOptions.map((a) => (
-                <option value={a.id} selected={params.get('assigned_agent') === a.id}>
-                  {a.full_name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {agentOptions.length > 0 && (
+            <div class="flex flex-col gap-1">
+              <label
+                for="assigned_agent"
+                class="text-xs font-medium text-ink-500 dark:text-ink-300"
+              >
+                Agent
+              </label>
+              <select
+                id="assigned_agent"
+                name="assigned_agent"
+                class="rounded-sm border border-ink-200 px-3 py-2 text-sm dark:border-ink-600 dark:bg-ink-900"
+              >
+                <option value="">All agents</option>
+                {agentOptions.map((a) => (
+                  <option value={a.id} selected={params.get('assigned_agent') === a.id}>
+                    {a.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          {!myLeads && (
+          {!myLeads && reviewingOfficerOptions.length > 0 && (
             <div class="flex flex-col gap-1">
               <label
                 for="reviewing_officer"
