@@ -74,6 +74,7 @@ const CONFIGURATION: NavItem[] = [
     href: '/cooperatives',
     icon: 'landmark',
     requiredPermission: 'view_cooperatives',
+    alert: true,
   },
 ];
 

@@ -1,5 +1,11 @@
 import { request } from '../../shared/api-client';
-import type { Cooperative, CooperativeMember, BranchOption, PaginatedResponse } from './types';
+import type {
+  Cooperative,
+  CooperativeMember,
+  BranchOption,
+  PaginatedResponse,
+  PendingLeader,
+} from './types';
 
 export async function getCooperatives(accessToken: string): Promise<Cooperative[]> {
   const page = await request<PaginatedResponse<Cooperative>>(
@@ -33,4 +39,8 @@ export async function getCooperativeMembers(
     accessToken,
   );
   return page.results;
+}
+
+export function getPendingLeaders(accessToken: string): Promise<PendingLeader[]> {
+  return request<PendingLeader[]>('/users/pending-leaders/', { method: 'GET' }, accessToken);
 }

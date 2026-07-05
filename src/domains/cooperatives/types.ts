@@ -25,10 +25,28 @@ export interface Cooperative {
   branches: string[];
   chairperson: string | null;
   secretary: string | null;
+  chairperson_detail: LeaderDetail | null;
+  secretary_detail: LeaderDetail | null;
   contact_phone: string;
   contact_email: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface LeaderDetail {
+  id: string;
+  full_name: string;
+  phone: string;
+  leader_approval_status: 'approved' | 'pending' | 'rejected';
+}
+
+export interface PendingLeader {
+  id: string;
+  full_name: string;
+  phone: string;
+  role: 'chairperson' | 'coop_secretary';
+  created_at: string;
+  cooperatives: Array<{ id: string; name: string }>;
 }
 
 export type MemberGender = 'male' | 'female' | 'other' | '';

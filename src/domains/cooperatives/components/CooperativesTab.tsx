@@ -103,6 +103,14 @@ export default function CooperativesTab({ initialCooperatives, branchOptions, ca
                     <div>
                       <p className="font-medium text-ink-700 dark:text-ink-50">{coop.name}</p>
                       <p className="font-mono text-xs text-ink-400">{coop.registration_number}</p>
+                      {coop.chairperson_detail && (
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-300">
+                          <span>{coop.chairperson_detail.full_name}</span>
+                          {coop.chairperson_detail.leader_approval_status === 'pending' && (
+                            <Badge label="Pending" color="yellow" />
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </td>

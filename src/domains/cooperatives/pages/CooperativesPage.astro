@@ -2,20 +2,25 @@
 import AppLayout from '../../../shell/AppLayout.astro';
 import NotAuthorized from '../../../shell/NotAuthorized.astro';
 import CooperativesTab from '../components/CooperativesTab';
-import { getCooperatives, getBranchOptions } from '../api';
+import PendingLeadersCard from '../components/PendingLeadersCard';
+import { getCooperatives, getBranchOptions, getPendingLeaders } from '../api';
 import { ApiError } from '../../../shared/api-client';
-import type { Cooperative, BranchOption } from '../types';
+import type { Cooperative, BranchOption, PendingLeader } from '../types';
 
 const { user } = Astro.locals;
 
 let cooperatives: Cooperative[] = [];
 let branchOptions: BranchOption[] = [];
+let pendingLeaders: PendingLeader[] = [];
 let forbidden = false;
 try {
   [cooperatives, branchOptions] = await Promise.all([
     getCooperatives(Astro.locals.accessToken),
     getBranchOptions(Astro.locals.accessToken),
   ]);
+  if (user.permissions.includes('approve_leaders')) {
+    pendingLeaders = await getPendingLeaders(Astro.locals.accessToken);
+  }
 } catch (err) {
   if (err instanceof ApiError && err.status === 403) {
     forbidden = true;
@@ -32,12 +37,17 @@ const canManage = user.permissions.includes('manage_agents');
     forbidden ? (
       <NotAuthorized message="You don't have permission to view cooperatives." />
     ) : (
-      <CooperativesTab
-        initialCooperatives={cooperatives}
-        branchOptions={branchOptions}
-        canManage={canManage}
-        client:load
-      />
+      <>
+        {user.permissions.includes('approve_leaders') && (
+          <PendingLeadersCard initialLeaders={pendingLeaders} client:load />
+        )}
+        <CooperativesTab
+          initialCooperatives={cooperatives}
+          branchOptions={branchOptions}
+          canManage={canManage}
+          client:load
+        />
+      </>
     )
   }
 </AppLayout>

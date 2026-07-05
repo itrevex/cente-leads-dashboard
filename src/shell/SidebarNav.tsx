@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { NavSection } from './nav';
 import { NAV_ICONS } from './icons';
 
@@ -24,10 +25,28 @@ function bestMatchId(sections: NavSection[], currentPath: string): string | null
 }
 
 export default function SidebarNav({ sections, currentPath }: Props) {
-  const activeId = bestMatchId(sections, currentPath);
+  const [liveSections, setLiveSections] = useState(sections);
+  const activeId = bestMatchId(liveSections, currentPath);
+
+  useEffect(() => {
+    function updateCount(event: Event) {
+      const { id, count } = (event as CustomEvent<{ id: string; count: number }>).detail;
+      setLiveSections((current) =>
+        current.map((section) => ({
+          ...section,
+          items: section.items.map((item) =>
+            item.id === id ? { ...item, count: count > 0 ? count : undefined } : item,
+          ),
+        })),
+      );
+    }
+    window.addEventListener('nav-count-changed', updateCount);
+    return () => window.removeEventListener('nav-count-changed', updateCount);
+  }, []);
+
   return (
     <nav className="flex flex-col gap-5">
-      {sections.map((section) => (
+      {liveSections.map((section) => (
         <div key={section.label}>
           <p className="mb-1.5 px-2.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ink-400">
             {section.label}

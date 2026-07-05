@@ -54,3 +54,14 @@ export function listCooperativeMembers(
 ): Promise<PaginatedResponse<CooperativeMember>> {
   return call(`/api/cooperatives/${cooperativeId}/members/`);
 }
+
+export function approveLeader(id: string): Promise<unknown> {
+  return call(`/api/users/${id}/leader-approve/`, { method: 'POST' });
+}
+
+export function rejectLeader(id: string, reason: string): Promise<unknown> {
+  return call(`/api/users/${id}/leader-reject/`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}

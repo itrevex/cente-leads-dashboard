@@ -20,6 +20,7 @@ export type UserStatus = 'active' | 'disabled';
 export type PermissionKey =
   | 'view_leads'
   | 'approve_leads'
+  | 'approve_leaders'
   | 'recommend_decline'
   | 'view_reports'
   | 'export_data'

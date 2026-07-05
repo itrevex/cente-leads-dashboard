@@ -5,12 +5,12 @@ import SidebarNav from './SidebarNav';
 import { getStatusCounts } from '../domains/leads/api';
 import { ApiError } from '../shared/api-client';
 import { activeCount } from '../shared/lead-presentation';
+import { getPendingLeaders } from '../domains/cooperatives/api';
 
 interface Props {
   role: DashboardRole;
   userName: string;
 }
-
 const { role, userName } = Astro.props;
 const { user, accessToken } = Astro.locals;
 let sections = navForPermissions(user.permissions);
@@ -37,6 +37,16 @@ if (navIds.has('leads') || navIds.has('queue-mine')) {
     if (!(err instanceof ApiError && err.status === 403)) {
       throw err;
     }
+  }
+}
+if (navIds.has('cooperatives') && user.permissions.includes('approve_leaders')) {
+  try {
+    const pendingCount = (await getPendingLeaders(accessToken)).length;
+    if (pendingCount > 0) {
+      sections = withNavCounts(sections, { cooperatives: pendingCount });
+    }
+  } catch (err) {
+    if (!(err instanceof ApiError && err.status === 403)) throw err;
   }
 }
 const initials = userName
