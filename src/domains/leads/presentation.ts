@@ -4,6 +4,7 @@ export { STATUS_META, formatUgx, initialsOf } from '../../shared/lead-presentati
 // screens-main.jsx) — '' means "All".
 export const STATUS_BUCKETS = [
   { value: '', label: 'All' },
+  { value: 'draft', label: 'Draft' },
   { value: 'chair_pending', label: 'Chair Pending' },
   { value: 'review', label: 'Bank Reviewing' },
   { value: 'info_requested', label: 'Info Requested' },

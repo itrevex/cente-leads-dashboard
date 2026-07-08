@@ -9,6 +9,7 @@ import {
   getChairApprovals,
   getComments,
   getDocuments,
+  getGpsPins,
   getLeadAuditEvents,
 } from '../api';
 import {
@@ -38,18 +39,21 @@ let formSchema: Awaited<ReturnType<typeof getFormSchema>> | null = null;
 let chairApprovals: Awaited<ReturnType<typeof getChairApprovals>> = [];
 let comments: Awaited<ReturnType<typeof getComments>> = [];
 let documents: Awaited<ReturnType<typeof getDocuments>> = [];
+let gpsPins: Awaited<ReturnType<typeof getGpsPins>> = [];
 let auditEvents: Awaited<ReturnType<typeof getLeadAuditEvents>> = [];
 
 try {
   lead = await getLead(accessToken, id!);
-  [product, formSchema, chairApprovals, comments, documents, auditEvents] = await Promise.all([
-    getLoanProduct(accessToken, lead.loan_product),
-    getFormSchema(accessToken, lead.form_schema),
-    getChairApprovals(accessToken, lead.id),
-    getComments(accessToken, lead.id),
-    getDocuments(accessToken, lead.id),
-    getLeadAuditEvents(accessToken, lead.id),
-  ]);
+  [product, formSchema, chairApprovals, comments, documents, gpsPins, auditEvents] =
+    await Promise.all([
+      getLoanProduct(accessToken, lead.loan_product),
+      getFormSchema(accessToken, lead.form_schema),
+      getChairApprovals(accessToken, lead.id),
+      getComments(accessToken, lead.id),
+      getDocuments(accessToken, lead.id),
+      getGpsPins(accessToken, lead.id),
+      getLeadAuditEvents(accessToken, lead.id),
+    ]);
 } catch (err) {
   if (err instanceof ApiError && err.status === 403) {
     forbidden = true;
@@ -342,6 +346,16 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
               Documents <span class="text-xs text-ink-400">{documents.length}</span>
             </a>
             <a
+              href={tabHref('gps')}
+              class={`px-4 py-3 text-sm font-medium ${
+                activeTab === 'gps'
+                  ? 'border-b-2 border-cente-blue-600 text-cente-blue-600'
+                  : 'text-ink-500 dark:text-ink-300'
+              }`}
+            >
+              GPS <span class="text-xs text-ink-400">{gpsPins.length}</span>
+            </a>
+            <a
               href={tabHref('comments')}
               class={`px-4 py-3 text-sm font-medium ${
                 activeTab === 'comments'
@@ -460,9 +474,28 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
                       label: doc.upload_status,
                       color: 'neutral',
                     };
+                    const isImage = doc.content_type?.startsWith('image/');
                     return (
-                      <div class="flex items-center justify-between gap-3 rounded-sm border border-ink-100 px-4 py-3 dark:border-ink-700">
-                        <div>
+                      <a
+                        href={doc.download_url ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class={`flex items-center gap-3 rounded-sm border border-ink-100 px-4 py-3 dark:border-ink-700 ${
+                          doc.download_url ? 'hover:border-cente-blue-300' : 'pointer-events-none'
+                        }`}
+                      >
+                        {isImage && doc.download_url ? (
+                          <img
+                            src={doc.download_url}
+                            alt={DOC_TYPE_LABELS[doc.doc_type] ?? doc.doc_type}
+                            class="h-12 w-12 shrink-0 rounded-sm object-cover"
+                          />
+                        ) : (
+                          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm bg-ink-50 text-ink-400 dark:bg-ink-700">
+                            📄
+                          </div>
+                        )}
+                        <div class="min-w-0 flex-1">
                           <p class="text-sm font-medium text-ink-700 dark:text-ink-50">
                             {DOC_TYPE_LABELS[doc.doc_type] ?? doc.doc_type}
                           </p>
@@ -471,9 +504,36 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
                           </p>
                         </div>
                         <Badge label={meta.label} color={meta.color} />
-                      </div>
+                      </a>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'gps' && (
+            <div class="p-5">
+              {gpsPins.length === 0 ? (
+                <p class="text-sm text-ink-400">No GPS coordinates captured yet.</p>
+              ) : (
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {gpsPins.map((pin) => (
+                    <a
+                      href={`https://maps.google.com/?q=${pin.latitude},${pin.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="flex items-center justify-between gap-3 rounded-sm border border-ink-100 px-4 py-3 hover:border-cente-blue-300 dark:border-ink-700"
+                    >
+                      <div>
+                        <p class="text-sm font-medium text-ink-700 dark:text-ink-50">{pin.label}</p>
+                        <p class="text-xs text-ink-400">
+                          {pin.latitude}, {pin.longitude}
+                        </p>
+                      </div>
+                      <span class="text-xs text-cente-blue-600 underline">View on map</span>
+                    </a>
+                  ))}
                 </div>
               )}
             </div>

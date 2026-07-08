@@ -8,6 +8,7 @@ import type {
   ChairApproval,
   Comment,
   LeadDocument,
+  LeadGpsPin,
   AuditEvent,
   StatusCounts,
 } from './types';
@@ -156,6 +157,15 @@ export async function getComments(accessToken: string, leadId: string): Promise<
 export async function getDocuments(accessToken: string, leadId: string): Promise<LeadDocument[]> {
   const page = await request<PaginatedResponse<LeadDocument>>(
     `/leads/${leadId}/documents/`,
+    { method: 'GET' },
+    accessToken,
+  );
+  return page.results;
+}
+
+export async function getGpsPins(accessToken: string, leadId: string): Promise<LeadGpsPin[]> {
+  const page = await request<PaginatedResponse<LeadGpsPin>>(
+    `/leads/${leadId}/gps-pins/`,
     { method: 'GET' },
     accessToken,
   );

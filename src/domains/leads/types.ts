@@ -101,6 +101,17 @@ export interface LeadDocument {
   created_at: string;
 }
 
+export interface LeadGpsPin {
+  id: string;
+  lead: string;
+  requirement: string | null;
+  label: string;
+  latitude: string;
+  longitude: string;
+  client_local_id: string | null;
+  created_at: string;
+}
+
 export interface AuditEvent {
   id: string;
   actor_user: string | null;
