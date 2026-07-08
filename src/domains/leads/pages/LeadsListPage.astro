@@ -10,7 +10,13 @@ import {
   getAgentOptions,
   getReviewingOfficerOptions,
 } from '../api';
-import { STATUS_META, formatUgx, initialsOf, activeCount } from '../../../shared/lead-presentation';
+import {
+  STATUS_META,
+  formatUgx,
+  initialsOf,
+  activeCount,
+  clearChairpersonHref,
+} from '../../../shared/lead-presentation';
 import { STATUS_BUCKETS, SOURCE_FILTER_OPTIONS } from '../presentation';
 import Badge from '../../../shared/components/Badge';
 import Avatar from '../../../shared/components/Avatar';
@@ -44,6 +50,7 @@ const myLeadsScope: Partial<LeadFilters> =
 const baseFilters: LeadFilters = {
   branch: params.get('branch') ?? undefined,
   cooperative: params.get('cooperative') ?? undefined,
+  chairperson: params.get('chairperson') ?? undefined,
   assigned_agent: params.get('assigned_agent') ?? undefined,
   reviewing_officer: myLeads ? undefined : (params.get('reviewing_officer') ?? undefined),
   source: params.get('source') ?? undefined,
@@ -120,6 +127,12 @@ const scopeLabel = user.permissions.includes('view_all_branches')
   ? 'All branches'
   : (user.branch_name ?? 'Branch scope');
 const pageTitle = myLeads ? 'My Leads' : 'Leads';
+
+const chairpersonFilterId = params.get('chairperson') ?? undefined;
+const chairpersonFilterName = chairpersonFilterId
+  ? (leadsPage?.results.find((lead) => lead.chairperson_detail?.id === chairpersonFilterId)
+      ?.chairperson_detail?.full_name ?? null)
+  : null;
 ---
 
 <AppLayout title={pageTitle}>
@@ -138,6 +151,21 @@ const pageTitle = myLeads ? 'My Leads' : 'Leads';
             </p>
           </div>
         </div>
+
+        {chairpersonFilterId && (
+          <div class="mb-4 flex items-center justify-between gap-3 rounded-md border border-cente-blue-200 bg-cente-blue-50 px-4 py-2.5 text-sm text-cente-blue-700 dark:border-cente-blue-800 dark:bg-cente-blue-900/30 dark:text-cente-blue-200">
+            <span>
+              Filtered to leads pending review by{' '}
+              <strong>{chairpersonFilterName ?? 'this chairperson'}</strong>
+            </span>
+            <a
+              href={clearChairpersonHref(basePath, params)}
+              class="rounded-pill border border-cente-blue-300 px-3 py-1 text-xs font-medium hover:bg-cente-blue-100 dark:border-cente-blue-700 dark:hover:bg-cente-blue-900/50"
+            >
+              Clear
+            </a>
+          </div>
+        )}
 
         <div class="mb-4 flex flex-wrap gap-2 rounded-md border border-ink-100 bg-white p-3 dark:border-ink-700 dark:bg-ink-800">
           {STATUS_BUCKETS.map((bucket) => {

@@ -20,6 +20,7 @@ import {
   DOC_TYPE_LABELS,
   UPLOAD_STATUS_META,
 } from '../presentation';
+import { chairpersonPendingReviewHref } from '../../../shared/lead-presentation';
 import Badge from '../../../shared/components/Badge';
 import Avatar from '../../../shared/components/Avatar';
 import LeadDecisionActions from '../components/LeadDecisionActions';
@@ -230,6 +231,28 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
                 <div class="flex justify-between gap-3">
                   <dt class="text-ink-400">Cooperative</dt>
                   <dd class="text-right text-ink-700 dark:text-ink-50">{lead.cooperative_name}</dd>
+                </div>
+              )}
+              {lead.chairperson_detail && (
+                <div class="flex justify-between gap-3">
+                  <dt class="text-ink-400">Chairperson</dt>
+                  <dd class="text-right text-ink-700 dark:text-ink-50">
+                    <a
+                      href={chairpersonPendingReviewHref(lead.chairperson_detail.id)}
+                      class="text-cente-blue-600 underline hover:text-cente-blue-700"
+                      title="View leads pending this chairperson's review"
+                    >
+                      {lead.chairperson_detail.full_name}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {lead.secretary_detail && (
+                <div class="flex justify-between gap-3">
+                  <dt class="text-ink-400">Secretary</dt>
+                  <dd class="text-right text-ink-700 dark:text-ink-50">
+                    {lead.secretary_detail.full_name}
+                  </dd>
                 </div>
               )}
               <div class="flex justify-between gap-3">

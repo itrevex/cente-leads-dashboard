@@ -37,3 +37,23 @@ export function initialsOf(fullName: string): string {
     .join('')
     .toUpperCase();
 }
+
+// Links a lead detail page's chairperson name to the leads list scoped to
+// everything awaiting that chairperson's sign-off — combines chairperson
+// with status=chair_pending (apps.leads.models.LeadStatus.CHAIR_PENDING) so
+// leads mid-bank-review (status=review) aren't mistakenly included.
+export function chairpersonPendingReviewHref(chairpersonId: string): string {
+  return `/leads?chairperson=${chairpersonId}&status=chair_pending`;
+}
+
+// Removes the chairperson query param (and resets pagination, since the
+// result set is about to change) while preserving every other active
+// filter — used by the leads list page's "Clear" affordance on the
+// chairperson-filter banner.
+export function clearChairpersonHref(basePath: string, params: URLSearchParams): string {
+  const next = new URLSearchParams(params);
+  next.delete('chairperson');
+  next.delete('page');
+  const query = next.toString();
+  return query ? `${basePath}?${query}` : basePath;
+}

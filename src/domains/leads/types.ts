@@ -1,9 +1,18 @@
+export interface LeaderDetail {
+  id: string;
+  full_name: string;
+  phone: string;
+  leader_approval_status: 'approved' | 'pending' | 'rejected';
+}
+
 export interface Lead {
   id: string;
   branch: string;
   branch_name: string;
   cooperative: string | null;
   cooperative_name: string | null;
+  chairperson_detail: LeaderDetail | null;
+  secretary_detail: LeaderDetail | null;
   member: string | null;
   loan_product: string;
   form_schema: string;
@@ -143,6 +152,7 @@ export interface LeadFilters {
   status?: string;
   branch?: string;
   cooperative?: string;
+  chairperson?: string;
   assigned_agent?: string;
   reviewing_officer?: string;
   source?: string;

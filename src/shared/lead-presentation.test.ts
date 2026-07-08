@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { activeCount, formatUgx, initialsOf } from './lead-presentation';
+import {
+  activeCount,
+  chairpersonPendingReviewHref,
+  clearChairpersonHref,
+  formatUgx,
+  initialsOf,
+} from './lead-presentation';
 
 describe('lead-presentation helpers', () => {
   it('formats UGX values from minor units', () => {
@@ -36,5 +42,31 @@ describe('lead-presentation helpers', () => {
   it('returns sensible initials for short or empty names', () => {
     expect(initialsOf('Madonna')).toBe('M');
     expect(initialsOf('   ')).toBe('');
+  });
+
+  it('builds a chairperson-pending-review link scoped to chair_pending', () => {
+    expect(chairpersonPendingReviewHref('user-123')).toBe(
+      '/leads?chairperson=user-123&status=chair_pending',
+    );
+  });
+
+  it('clears only the chairperson and page params, keeping other filters', () => {
+    const params = new URLSearchParams(
+      'chairperson=user-123&status=chair_pending&branch=b1&page=3',
+    );
+    const href = clearChairpersonHref('/leads', params);
+    const [path, query] = href.split('?');
+    const result = new URLSearchParams(query);
+
+    expect(path).toBe('/leads');
+    expect(result.has('chairperson')).toBe(false);
+    expect(result.has('page')).toBe(false);
+    expect(result.get('status')).toBe('chair_pending');
+    expect(result.get('branch')).toBe('b1');
+  });
+
+  it('returns the bare base path when clearing chairperson leaves no other filters', () => {
+    const params = new URLSearchParams('chairperson=user-123&page=2');
+    expect(clearChairpersonHref('/leads/mine', params)).toBe('/leads/mine');
   });
 });
