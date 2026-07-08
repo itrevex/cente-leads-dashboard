@@ -29,23 +29,23 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [duplicating, setDuplicating] = useState(false);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [dismissedDraftNudge, setDismissedDraftNudge] = useState(false);
 
-  async function handleDuplicate() {
-    if (!selectedId) return;
-    setDuplicating(true);
+  const draftProducts = products.filter((p) => p.has_draft_schema);
+
+  async function handleDuplicate(id: string) {
+    setDuplicatingId(id);
     setError(null);
     try {
-      const copy = await duplicateProduct(selectedId);
+      const copy = await duplicateProduct(id);
       setProducts((prev) => [...prev, copy]);
-      setSelectedId(copy.id);
     } catch (err) {
       setError(
         err instanceof ProductsApiError ? JSON.stringify(err.body) : 'Failed to duplicate product.',
       );
     } finally {
-      setDuplicating(false);
+      setDuplicatingId(null);
     }
   }
 
@@ -86,23 +86,46 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
           </p>
         </div>
         {canManage && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleDuplicate}
-              disabled={!selectedId || duplicating}
-              className="flex items-center gap-2 rounded-pill border border-ink-200 px-4 py-2 text-sm font-medium text-ink-600 hover:bg-ink-50 disabled:opacity-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-700/40"
-            >
-              <Copy size={15} /> {duplicating ? 'Duplicating…' : 'Duplicate'}
-            </button>
-            <button
-              onClick={() => setShowForm((v) => !v)}
-              className="flex items-center gap-2 rounded-pill bg-cente-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-cente-red-600"
-            >
-              <Plus size={15} /> New Product
-            </button>
-          </div>
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="flex items-center gap-2 rounded-pill bg-cente-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-cente-red-600"
+          >
+            <Plus size={15} /> New Product
+          </button>
         )}
       </div>
+
+      {!dismissedDraftNudge && draftProducts.length > 0 && (
+        <div className="mb-4 flex items-start justify-between gap-3 rounded-md border border-cente-yellow-300 bg-cente-yellow-50 p-4 text-sm dark:border-cente-yellow-700/40 dark:bg-cente-yellow-700/10">
+          <p className="text-cente-yellow-800 dark:text-cente-yellow-300">
+            <strong>
+              {draftProducts.length} product{draftProducts.length === 1 ? ' has' : 's have'} an
+              unpublished form draft:
+            </strong>{' '}
+            {draftProducts.map((p, i) => (
+              <span key={p.id}>
+                {i > 0 && ', '}
+                <a href={`/products/${p.id}`} className="underline hover:no-underline">
+                  {p.name}
+                </a>
+              </span>
+            ))}
+            . Agents won&apos;t see the new form until it&apos;s published.
+          </p>
+          <button
+            onClick={() => setDismissedDraftNudge(true)}
+            className="shrink-0 text-xs font-medium text-cente-yellow-700 hover:underline dark:text-cente-yellow-400"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {error && !showForm && (
+        <p className="mb-4 rounded-md border border-cente-red-200 bg-cente-red-50 p-3 text-xs text-cente-red-600 dark:border-cente-red-700/40 dark:bg-cente-red-700/10">
+          {error}
+        </p>
+      )}
 
       {showForm && (
         <form
@@ -263,8 +286,7 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-ink-400">
-              <th className="w-8 px-5 py-2 font-medium"></th>
-              <th className="px-2 py-2 font-medium">Name</th>
+              <th className="px-5 py-2 font-medium">Name</th>
               <th className="px-2 py-2 font-medium">Code</th>
               <th className="px-2 py-2 font-medium">Segment</th>
               <th className="px-2 py-2 font-medium">Amount range</th>
@@ -273,13 +295,14 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
               <th className="px-2 py-2 font-medium">Branches</th>
               <th className="px-2 py-2 text-right font-medium">Applications (MTD)</th>
               <th className="px-2 py-2 text-right font-medium">Approval rate</th>
-              <th className="px-5 py-2 font-medium">Status</th>
+              <th className="px-2 py-2 font-medium">Status</th>
+              {canManage && <th className="w-10 px-5 py-2 font-medium"></th>}
             </tr>
           </thead>
           <tbody>
             {products.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-5 py-6 text-center text-ink-400">
+                <td colSpan={canManage ? 10 : 9} className="px-5 py-6 text-center text-ink-400">
                   No loan products yet.
                 </td>
               </tr>
@@ -287,28 +310,22 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
             {products.map((p) => (
               <tr
                 key={p.id}
-                onClick={() => setSelectedId(p.id)}
-                className={`cursor-pointer border-t border-ink-100 hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-700/40 ${
-                  selectedId === p.id ? 'bg-cente-blue-50 dark:bg-ink-700/40' : ''
-                }`}
+                onClick={() => (window.location.href = `/products/${p.id}`)}
+                className="cursor-pointer border-t border-ink-100 hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-700/40"
               >
-                <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="radio"
-                    checked={selectedId === p.id}
-                    onChange={() => setSelectedId(p.id)}
-                    className="accent-cente-blue-600"
-                  />
-                </td>
-                <td
-                  className="px-2 py-3"
-                  onClick={() => (window.location.href = `/products/${p.id}`)}
-                >
+                <td className="px-5 py-3">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cente-blue-100 text-cente-blue-700">
                       <Package size={14} />
                     </span>
-                    <p className="font-medium text-ink-700 dark:text-ink-50">{p.name}</p>
+                    <div>
+                      <p className="font-medium text-ink-700 dark:text-ink-50">{p.name}</p>
+                      {p.has_draft_schema && (
+                        <p className="text-xs text-cente-yellow-700 dark:text-cente-yellow-400">
+                          Unpublished draft
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td className="px-2 py-3 font-mono text-xs text-ink-500 dark:text-ink-300">
@@ -335,12 +352,27 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
                 <td className="px-2 py-3 text-right text-ink-500 dark:text-ink-300">
                   {p.approval_rate === null ? '—' : `${p.approval_rate}%`}
                 </td>
-                <td className="px-5 py-3">
+                <td className="px-2 py-3">
                   <Badge
                     label={p.is_active ? 'Active' : 'Inactive'}
                     color={p.is_active ? 'green' : 'neutral'}
                   />
                 </td>
+                {canManage && (
+                  <td className="px-5 py-3 text-right">
+                    <button
+                      title={`Duplicate ${p.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDuplicate(p.id);
+                      }}
+                      disabled={duplicatingId === p.id}
+                      className="rounded-sm p-1.5 text-ink-400 hover:bg-ink-100 hover:text-ink-600 disabled:opacity-50 dark:hover:bg-ink-700"
+                    >
+                      <Copy size={15} />
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

@@ -19,6 +19,7 @@ export interface LoanProduct {
   is_active: boolean;
   applications_mtd: number;
   approval_rate: number | null;
+  has_draft_schema: boolean;
   created_at: string;
   updated_at: string;
 }

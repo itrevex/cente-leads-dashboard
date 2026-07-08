@@ -42,6 +42,45 @@ describe('ProductsListPage', () => {
     expect(screen.queryByRole('button', { name: 'New Product' })).toBeNull();
   });
 
+  it('nudges about unpublished draft schemas and can be dismissed', async () => {
+    render(
+      <ProductsListPage
+        canManage
+        initialProducts={[
+          {
+            id: 'product-1',
+            code: 'SAL-001',
+            name: 'Salary Advance',
+            segment: 'salary',
+            description: '',
+            min_amount: 100000,
+            max_amount: 500000,
+            currency: 'UGX',
+            interest_rate_bps: 1800,
+            processing_fee_bps: 100,
+            min_term_months: 1,
+            max_term_months: 6,
+            requires_chair_approval: false,
+            active_form_schema: null,
+            branch_availability: [],
+            is_active: true,
+            applications_mtd: 0,
+            approval_rate: null,
+            has_draft_schema: true,
+            created_at: '2026-06-27T00:00:00Z',
+            updated_at: '2026-06-27T00:00:00Z',
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText(/unpublished form draft/)).toBeTruthy();
+    expect(screen.getByText('Unpublished draft')).toBeTruthy();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByText(/unpublished form draft/)).toBeNull();
+  });
+
   it('creates a product and surfaces duplicate/create failures', async () => {
     createProduct
       .mockRejectedValueOnce(new ProductsApiError(422, { detail: 'bad payload' }))
@@ -64,6 +103,7 @@ describe('ProductsListPage', () => {
         is_active: true,
         applications_mtd: 0,
         approval_rate: null,
+        has_draft_schema: false,
         created_at: '2026-06-27T00:00:00Z',
         updated_at: '2026-06-27T00:00:00Z',
       });
@@ -86,6 +126,7 @@ describe('ProductsListPage', () => {
       is_active: true,
       applications_mtd: 0,
       approval_rate: null,
+      has_draft_schema: false,
       created_at: '2026-06-27T00:00:00Z',
       updated_at: '2026-06-27T00:00:00Z',
     });
@@ -113,6 +154,7 @@ describe('ProductsListPage', () => {
             is_active: true,
             applications_mtd: 2,
             approval_rate: null,
+            has_draft_schema: false,
             created_at: '2026-06-27T00:00:00Z',
             updated_at: '2026-06-27T00:00:00Z',
           },
@@ -121,9 +163,6 @@ describe('ProductsListPage', () => {
     );
 
     expect(screen.getByText('1 product configured')).toBeTruthy();
-    expect((screen.getByRole('button', { name: 'Duplicate' }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
 
     await userEvent.click(screen.getByRole('button', { name: 'New Product' }));
     await userEvent.type(screen.getByLabelText('Code'), 'BUS-001');
@@ -144,11 +183,7 @@ describe('ProductsListPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
     await screen.findByText('Business Loan');
 
-    (screen.getAllByRole('radio')[0] as HTMLInputElement).click();
-    expect((screen.getByRole('button', { name: 'Duplicate' }) as HTMLButtonElement).disabled).toBe(
-      false,
-    );
-    await userEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+    await userEvent.click(screen.getByTitle('Duplicate Salary Advance'));
     await screen.findByText('Salary Advance Copy');
   });
 
@@ -190,6 +225,7 @@ describe('ProductsListPage', () => {
             is_active: true,
             applications_mtd: 2,
             approval_rate: null,
+            has_draft_schema: false,
             created_at: '2026-06-27T00:00:00Z',
             updated_at: '2026-06-27T00:00:00Z',
           },
@@ -231,14 +267,16 @@ describe('ProductsListPage', () => {
       is_active: true,
       applications_mtd: 0,
       approval_rate: null,
+      has_draft_schema: false,
       created_at: '2026-06-27T00:00:00Z',
       updated_at: '2026-06-27T00:00:00Z',
     });
     await screen.findByText('Pending Product');
 
-    (screen.getAllByRole('radio')[0] as HTMLInputElement).click();
-    await userEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
-    expect(screen.getByRole('button', { name: 'Duplicating…' })).toBeTruthy();
+    await userEvent.click(screen.getByTitle('Duplicate Salary Advance'));
+    expect((screen.getByTitle('Duplicate Salary Advance') as HTMLButtonElement).disabled).toBe(
+      true,
+    );
     resolveDuplicate!({
       id: 'product-3',
       code: 'SAL-001-COPY',
@@ -258,6 +296,7 @@ describe('ProductsListPage', () => {
       is_active: true,
       applications_mtd: 0,
       approval_rate: null,
+      has_draft_schema: false,
       created_at: '2026-06-27T00:00:00Z',
       updated_at: '2026-06-27T00:00:00Z',
     });
@@ -290,6 +329,7 @@ describe('ProductsListPage', () => {
             is_active: true,
             applications_mtd: 2,
             approval_rate: null,
+            has_draft_schema: false,
             created_at: '2026-06-27T00:00:00Z',
             updated_at: '2026-06-27T00:00:00Z',
           },
@@ -297,8 +337,7 @@ describe('ProductsListPage', () => {
       />,
     );
 
-    (screen.getAllByRole('radio')[0] as HTMLInputElement).click();
-    await userEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+    await userEvent.click(screen.getByTitle('Duplicate Salary Advance'));
     await waitFor(() => {
       expect(duplicateProduct).toHaveBeenCalledWith('product-1');
     });

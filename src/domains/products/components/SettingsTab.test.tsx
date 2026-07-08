@@ -42,6 +42,7 @@ const product: LoanProduct = {
   is_active: true,
   applications_mtd: 2,
   approval_rate: 80,
+  has_draft_schema: false,
   created_at: '2026-06-27T00:00:00Z',
   updated_at: '2026-06-27T00:00:00Z',
 };
