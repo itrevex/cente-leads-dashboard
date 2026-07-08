@@ -76,6 +76,31 @@ function authHandlers({ invalidOtp = false, refreshFails = false, directLogin = 
         by_status: { submitted: 15, review: 12, chair_pending: 4, returned: 3, approved: 14 },
       });
     }),
+    // The Topbar's NotificationBell (src/domains/notifications/NotificationBell.tsx)
+    // fetches this on mount on every authenticated page via the same-origin
+    // /api/notifications/ proxy -- present on every page these handler sets
+    // render, so it belongs in the shared authHandlers(), not a per-scenario set.
+    http.get(`${API_BASE_URL}/notifications/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated([]));
+    }),
+    http.post(`${API_BASE_URL}/notifications/:id/mark-read/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(`${API_BASE_URL}/notifications/mark-all-read/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return new HttpResponse(null, { status: 204 });
+    }),
   ];
 }
 
