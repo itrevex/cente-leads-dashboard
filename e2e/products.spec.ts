@@ -31,9 +31,8 @@ test('renders products and supports create, duplicate, and settings update flows
 
   await page
     .getByRole('row', { name: /Business Booster/i })
-    .locator('input[type="radio"]')
-    .check();
-  await page.getByRole('button', { name: /Duplicate/i }).click();
+    .getByTitle(/Duplicate/i)
+    .click();
   await expect(page.getByText('Business Booster Copy')).toBeVisible();
 
   await page.getByRole('cell', { name: 'Salary Advance' }).click();
@@ -119,7 +118,7 @@ test('renders products and supports create, duplicate, and settings update flows
 
   await page.goto('/products');
   await page.getByText('Business Booster', { exact: true }).first().click();
-  await expect(page).toHaveURL(/\/products\/product-2$/);
+  await expect(page).toHaveURL(/\/products\/product-\d+$/);
   await expect(page.getByText('No form schema yet for this product.')).toBeVisible();
   await page.getByRole('button', { name: 'Create draft version' }).click();
   await expect(page.getByText(/Version 1/i)).toBeVisible();

@@ -1,17 +1,26 @@
 import { http, HttpResponse } from 'msw';
 import { URL } from 'node:url';
+import { Buffer } from 'node:buffer';
 
 import { paginated, branches } from '../fixtures/branches.js';
 import { makeJwtPair, makeJwt } from '../fixtures/jwt.js';
 import { overviewReport } from '../fixtures/overview.js';
 import { makeProduct, makeSchema } from '../fixtures/products.js';
-import { systemAdminUser } from '../fixtures/users.js';
+import { makeLead, makeStatusCounts } from '../fixtures/leads.js';
+import { systemAdminUser, loanOfficerUser, branchManagerUser } from '../fixtures/users.js';
+import { roles, permissions as allPermissions } from '../fixtures/roles.js';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 const validPhone = '+256700000001';
 const validPassword = 'Passw0rd!';
 const validOtp = '123456';
 const otpSessionToken = 'otp-session-001';
+
+// Every account authHandlers() will accept a login for, keyed by phone --
+// (phone, password) -> user fixture. Defaults to just the system admin
+// (existing behavior); handler sets that need to log in as a different
+// role (e.g. leadsHandlers()) pass their own `users` list.
+const DEFAULT_CREDENTIALS = [{ phone: validPhone, password: validPassword, user: systemAdminUser }];
 
 function json(data, init = {}) {
   return HttpResponse.json(data, init);
@@ -25,41 +34,71 @@ function ensureAuth(request) {
   return null;
 }
 
-function authHandlers({ invalidOtp = false, refreshFails = false, directLogin = false } = {}) {
+// Decodes the unsigned JWT makeJwt() produces (alg: 'none') to recover
+// which user is making the request -- mirrors how a real backend resolves
+// request.user from the Authorization header, so /users/me/ and other
+// per-user responses reflect whoever actually logged in, not always the
+// same hardcoded fixture.
+function currentUserFrom(request, credentials) {
+  const header = request.headers.get('authorization') ?? '';
+  const token = header.replace(/^Bearer\s+/i, '');
+  const payloadSegment = token.split('.')[1];
+  if (!payloadSegment) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(payloadSegment, 'base64').toString('utf8'));
+    return credentials.find((entry) => entry.user.id === payload.sub)?.user ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function authHandlers({
+  invalidOtp = false,
+  refreshFails = false,
+  directLogin = false,
+  credentials = DEFAULT_CREDENTIALS,
+} = {}) {
   return [
     http.post(`${API_BASE_URL}/auth/login/`, async ({ request }) => {
       const body = await request.json();
-      if (body.phone !== validPhone || body.password !== validPassword) {
+      const match = credentials.find(
+        (entry) => entry.phone === body.phone && entry.password === body.password,
+      );
+      if (!match) {
         return json({ detail: 'Invalid credentials' }, { status: 401 });
       }
       if (directLogin) {
-        return json(makeJwtPair());
+        return json(makeJwtPair({ sub: match.user.id, role: match.user.role }));
       }
-      return json({ session_token: otpSessionToken });
+      return json({ session_token: `${otpSessionToken}-${match.user.id}` });
     }),
     http.post(`${API_BASE_URL}/auth/otp/verify/`, async ({ request }) => {
       const body = await request.json();
-      if (body.session_token !== otpSessionToken) {
+      const match = credentials.find(
+        (entry) => `${otpSessionToken}-${entry.user.id}` === body.session_token,
+      );
+      if (!match) {
         return json({ detail: 'Session not found' }, { status: 401 });
       }
       if (invalidOtp || body.code !== validOtp) {
         return json({ detail: 'Invalid code' }, { status: 401 });
       }
-      return json(makeJwtPair());
+      return json(makeJwtPair({ sub: match.user.id, role: match.user.role }));
     }),
     http.post(`${API_BASE_URL}/auth/token/refresh/`, async ({ request }) => {
       const body = await request.json();
-      if (refreshFails || body.refresh !== 'refresh-user-system-admin') {
+      const match = credentials.find((entry) => `refresh-${entry.user.id}` === body.refresh);
+      if (refreshFails || !match) {
         return json({ detail: 'Token is invalid or expired' }, { status: 401 });
       }
-      return json(makeJwtPair());
+      return json(makeJwtPair({ sub: match.user.id, role: match.user.role }));
     }),
     http.get(`${API_BASE_URL}/users/me/`, ({ request }) => {
       const unauthorized = ensureAuth(request);
       if (unauthorized) {
         return unauthorized;
       }
-      return json(systemAdminUser);
+      return json(currentUserFrom(request, credentials) ?? systemAdminUser);
     }),
     http.get(`${API_BASE_URL}/leads/status-counts/`, ({ request }) => {
       const unauthorized = ensureAuth(request);
@@ -598,6 +637,461 @@ function productsHandlers() {
   ];
 }
 
+// ADR-0034 tiered-decline scenario: a lead in `review`, testable as both
+// Loan Officer (can Recommend / Recommend Decline, not Decline) and Branch
+// Manager (can Recommend / Decline directly), plus the Users & Roles "Last
+// activity" column reading last_active_at. Both accounts log in directly
+// (no OTP step) to keep the tests focused on the leads/users UI, not the
+// auth flow already covered by auth.spec.ts/auth-direct.spec.ts.
+function leadsHandlers() {
+  const credentials = [
+    { phone: loanOfficerUser.phone, password: 'Passw0rd!', user: loanOfficerUser },
+    { phone: branchManagerUser.phone, password: 'Passw0rd!', user: branchManagerUser },
+    { phone: systemAdminUser.phone, password: validPassword, user: systemAdminUser },
+  ];
+
+  const leads = [
+    makeLead(),
+    makeLead({
+      id: 'lead-002',
+      applicant_name: 'Rebecca Auma',
+      applicant_phone: '+256770000021',
+      applicant_nin: 'CM87654321',
+    }),
+    makeLead({
+      id: 'lead-003',
+      applicant_name: 'Grace Atim',
+      applicant_phone: '+256770000022',
+      applicant_nin: 'CM11223344',
+    }),
+  ];
+
+  function findLead(id) {
+    return leads.find((lead) => lead.id === id) ?? null;
+  }
+
+  function decide(id, nextStatus, extra = {}) {
+    const lead = findLead(id);
+    if (!lead) return null;
+    Object.assign(lead, { status: nextStatus, ...extra });
+    return lead;
+  }
+
+  return [
+    ...authHandlers({ directLogin: true, credentials }),
+    // Login hard-navigates to '/' (Overview) before any test can move on to
+    // /leads/mine (src/domains/auth/components/LoginForm.tsx).
+    http.get(`${API_BASE_URL}/reports/overview/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(overviewReport);
+    }),
+    http.get(`${API_BASE_URL}/leads/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated(leads));
+    }),
+    http.get(`${API_BASE_URL}/leads/status-counts/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const activeCount = leads.filter(
+        (lead) => lead.status !== 'recommended' && lead.status !== 'declined',
+      ).length;
+      return json(
+        makeStatusCounts({
+          all: activeCount,
+          by_status: {
+            draft: 0,
+            chair_pending: 0,
+            review: leads.filter((lead) => lead.status === 'review').length,
+            info_requested: 0,
+            returned: 0,
+            decline_recommended: leads.filter((lead) => lead.status === 'decline_recommended')
+              .length,
+            recommended: leads.filter((lead) => lead.status === 'recommended').length,
+            declined: leads.filter((lead) => lead.status === 'declined').length,
+          },
+        }),
+      );
+    }),
+    // Registered before the generic /leads/:id/ handler below -- MSW
+    // matches path handlers in registration order, and `:id` would
+    // otherwise swallow this literal path first (id="reassign-candidates"
+    // -> 404, silently emptying the Reassign modal's dropdowns).
+    http.get(`${API_BASE_URL}/leads/reassign-candidates/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json({
+        agents: [{ id: 'user-agent-001', full_name: 'Demo Agent', role: 'agent' }],
+        reviewing_officers: [
+          { id: loanOfficerUser.id, full_name: loanOfficerUser.full_name, role: 'loan_officer' },
+          {
+            id: branchManagerUser.id,
+            full_name: branchManagerUser.full_name,
+            role: 'branch_manager',
+          },
+        ],
+      });
+    }),
+    http.get(`${API_BASE_URL}/leads/:id/`, ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const lead = findLead(params.id);
+      if (!lead) {
+        return json({ detail: 'Not found.' }, { status: 404 });
+      }
+      return json(lead);
+    }),
+    http.get(`${API_BASE_URL}/loan-products/:id/`, ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(makeProduct({ id: params.id }));
+    }),
+    http.get(`${API_BASE_URL}/form-schemas/:id/`, ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(makeSchema({ id: params.id }));
+    }),
+    http.get(`${API_BASE_URL}/leads/:id/chair-approvals/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated([]));
+    }),
+    http.get(`${API_BASE_URL}/leads/:id/comments/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated([]));
+    }),
+    http.get(`${API_BASE_URL}/leads/:id/documents/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated([]));
+    }),
+    http.get(`${API_BASE_URL}/leads/:id/gps-pins/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated([]));
+    }),
+    http.get(`${API_BASE_URL}/audit-events/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      // Neither loan_officer nor branch_manager holds view_audit (ADR-0009)
+      // -- getLeadAuditEvents() treats a 403 here as "no timeline", not a
+      // page error.
+      return json({ detail: 'Forbidden.' }, { status: 403 });
+    }),
+    http.get(`${API_BASE_URL}/branches/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated(branches));
+    }),
+    http.get(`${API_BASE_URL}/cooperatives/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated([{ id: 'coop-001', name: 'Tukolere Wamu SACCO' }]));
+    }),
+    http.get(`${API_BASE_URL}/agents/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated([{ id: 'user-agent-001', full_name: 'Demo Agent' }]));
+    }),
+    http.get(`${API_BASE_URL}/users/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      // Neither loan_officer nor branch_manager holds view_users, so the
+      // reviewing-officer options dropdown degrades to empty, same as real
+      // apps.roles' ADR-0009 permission gate.
+      return json({ detail: 'Forbidden.' }, { status: 403 });
+    }),
+    http.post(`${API_BASE_URL}/leads/:id/recommend/`, async ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const lead = decide(params.id, 'recommended', { decided_at: '2026-07-08T10:00:00Z' });
+      if (!lead) return json({ detail: 'Not found.' }, { status: 404 });
+      return json(lead);
+    }),
+    http.post(`${API_BASE_URL}/leads/:id/decline/`, async ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const user = currentUserFrom(request, credentials);
+      if (user?.id !== branchManagerUser.id) {
+        return json(
+          { detail: 'You do not have permission to perform this action.' },
+          {
+            status: 403,
+          },
+        );
+      }
+      const body = await request.json();
+      const lead = decide(params.id, 'declined', {
+        decline_reason: body.reason,
+        decided_at: '2026-07-08T10:00:00Z',
+      });
+      if (!lead) return json({ detail: 'Not found.' }, { status: 404 });
+      return json(lead);
+    }),
+    http.post(`${API_BASE_URL}/leads/:id/recommend-decline/`, async ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const user = currentUserFrom(request, credentials);
+      if (user?.id !== loanOfficerUser.id) {
+        return json(
+          { detail: 'You do not have permission to perform this action.' },
+          {
+            status: 403,
+          },
+        );
+      }
+      const lead = decide(params.id, 'decline_recommended');
+      if (!lead) return json({ detail: 'Not found.' }, { status: 404 });
+      return json(lead);
+    }),
+    http.post(`${API_BASE_URL}/leads/:id/request-info/`, async ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const body = await request.json();
+      const lead = decide(params.id, 'info_requested', { info_requested_reason: body.reason });
+      if (!lead) return json({ detail: 'Not found.' }, { status: 404 });
+      return json(lead);
+    }),
+    http.post(`${API_BASE_URL}/leads/:id/return-to-agent/`, async ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const lead = decide(params.id, 'returned');
+      if (!lead) return json({ detail: 'Not found.' }, { status: 404 });
+      return json(lead);
+    }),
+    http.post(`${API_BASE_URL}/leads/:id/reassign/`, async ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const body = await request.json();
+      const reassignCandidates = [loanOfficerUser, branchManagerUser];
+      const extra = {};
+      if (body.agent_id !== undefined) {
+        extra.assigned_agent = body.agent_id;
+        extra.assigned_agent_name = 'Demo Agent';
+      }
+      if (body.reviewing_officer_id !== undefined) {
+        extra.reviewing_officer = body.reviewing_officer_id;
+        extra.reviewing_officer_name =
+          reassignCandidates.find((entry) => entry.id === body.reviewing_officer_id)?.full_name ??
+          null;
+      }
+      const lead = decide(params.id, findLead(params.id)?.status, extra);
+      if (!lead) return json({ detail: 'Not found.' }, { status: 404 });
+      return json(lead);
+    }),
+  ];
+}
+
+// Users & Roles: system admin sees the Loan Officer's real last_active_at
+// (ADR-0009 follow-up) instead of the pre-existing last_login, which only
+// updates once per 30-day refresh-token lifetime.
+function usersHandlers() {
+  // 11 filler users beyond the 3 real fixtures push past UsersTab's
+  // PAGE_SIZE (10), exercising the Pagination component's Next/Prev.
+  const fillerUsers = Array.from({ length: 11 }, (_, index) => ({
+    id: `user-filler-${index + 1}`,
+    email: `filler${index + 1}@cente.test`,
+    phone: `+25670000${(index + 10).toString().padStart(2, '0')}`,
+    full_name: `Filler User ${index + 1}`,
+    role: 'loan_officer',
+    branch: 'branch-kampala',
+    branch_name: 'Kampala Main',
+    status: 'active',
+    last_login: null,
+    last_active_at: null,
+    permissions: ['view_leads'],
+    can_be_reviewing_officer: true,
+  }));
+  const users = [systemAdminUser, loanOfficerUser, branchManagerUser, ...fillerUsers];
+  const rolesState = roles.map((role) => ({ ...role, permissions: [...role.permissions] }));
+
+  function findRole(id) {
+    return rolesState.find((role) => role.id === id) ?? null;
+  }
+
+  return [
+    ...authHandlers({ directLogin: true }),
+    // Login hard-navigates to '/' (Overview) before any test can move on to
+    // /users (src/domains/auth/components/LoginForm.tsx).
+    http.get(`${API_BASE_URL}/reports/overview/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(overviewReport);
+    }),
+    http.get(`${API_BASE_URL}/users/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated(users));
+    }),
+    http.post(`${API_BASE_URL}/users/`, async ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const body = await request.json();
+      const user = {
+        id: `user-${users.length + 1}`,
+        email: body.email,
+        phone: body.phone,
+        full_name: body.full_name,
+        role: body.role,
+        branch: body.branch ?? null,
+        branch_name: branches.find((b) => b.id === body.branch)?.name ?? null,
+        status: 'active',
+        last_login: null,
+        last_active_at: null,
+        permissions: [],
+        can_be_reviewing_officer: false,
+      };
+      users.push(user);
+      return json(user, { status: 201 });
+    }),
+    http.patch(`${API_BASE_URL}/users/:id/`, async ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const user = users.find((entry) => entry.id === params.id);
+      if (!user) return json({ detail: 'Not found.' }, { status: 404 });
+      const body = await request.json();
+      Object.assign(user, {
+        full_name: body.full_name ?? user.full_name,
+        email: body.email ?? user.email,
+        phone: body.phone ?? user.phone,
+        role: body.role ?? user.role,
+        branch: body.branch ?? user.branch,
+      });
+      return json(user);
+    }),
+    http.post(`${API_BASE_URL}/users/:id/suspend/`, ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const user = users.find((entry) => entry.id === params.id);
+      if (!user) return json({ detail: 'Not found.' }, { status: 404 });
+      user.status = 'disabled';
+      return json(user);
+    }),
+    http.post(`${API_BASE_URL}/users/:id/reactivate/`, ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const user = users.find((entry) => entry.id === params.id);
+      if (!user) return json({ detail: 'Not found.' }, { status: 404 });
+      user.status = 'active';
+      return json(user);
+    }),
+    http.get(`${API_BASE_URL}/roles/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated(rolesState));
+    }),
+    http.post(`${API_BASE_URL}/roles/`, async ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const body = await request.json();
+      const role = {
+        id: `role-${rolesState.length + 1}`,
+        key: body.key,
+        name: body.name,
+        description: body.description ?? '',
+        is_builtin: false,
+        permissions: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      rolesState.push(role);
+      return json(role, { status: 201 });
+    }),
+    http.put(`${API_BASE_URL}/roles/:id/permissions/`, async ({ params, request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      const role = findRole(params.id);
+      if (!role) {
+        return json({ detail: 'Not found.' }, { status: 404 });
+      }
+      const body = await request.json();
+      role.permissions = body.permission_keys.map((key) => {
+        const permission = allPermissions.find((entry) => entry.key === key);
+        return { id: `grant-${key}`, key, name: permission?.name ?? key };
+      });
+      return json(role.permissions);
+    }),
+    http.get(`${API_BASE_URL}/permissions/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated(allPermissions));
+    }),
+    http.get(`${API_BASE_URL}/branches/`, ({ request }) => {
+      const unauthorized = ensureAuth(request);
+      if (unauthorized) {
+        return unauthorized;
+      }
+      return json(paginated(branches));
+    }),
+  ];
+}
+
 export function getHandlerSet(name) {
   switch (name) {
     case 'auth':
@@ -612,6 +1106,10 @@ export function getHandlerSet(name) {
       return overviewHandlers({ directLogin: true });
     case 'products':
       return productsHandlers();
+    case 'leads':
+      return leadsHandlers();
+    case 'users':
+      return usersHandlers();
     default:
       throw new Error(`Unknown handler set: ${name}`);
   }

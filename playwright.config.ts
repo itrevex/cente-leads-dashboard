@@ -54,6 +54,18 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI && !coverageEnabled,
       env: { ...process.env, COVERAGE: coverageEnabled ? 'true' : '' },
     },
+    {
+      command: serverCommand('leads', 3106),
+      port: 3106,
+      reuseExistingServer: !process.env.CI && !coverageEnabled,
+      env: { ...process.env, COVERAGE: coverageEnabled ? 'true' : '' },
+    },
+    {
+      command: serverCommand('users', 3107),
+      port: 3107,
+      reuseExistingServer: !process.env.CI && !coverageEnabled,
+      env: { ...process.env, COVERAGE: coverageEnabled ? 'true' : '' },
+    },
   ],
   projects: [
     {
@@ -106,6 +118,22 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         baseURL: 'http://127.0.0.1:3104',
         storageState: 'playwright/.auth/system-admin.json',
+      },
+    },
+    {
+      name: 'leads',
+      testMatch: /leads\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://127.0.0.1:3106',
+      },
+    },
+    {
+      name: 'users',
+      testMatch: /users\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://127.0.0.1:3107',
       },
     },
   ],

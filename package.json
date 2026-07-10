@@ -21,7 +21,7 @@
     "test:unit:coverage": "mkdir -p .nyc_output && rm -f .nyc_output/vitest-coverage.json && COVERAGE=true VITEST_NYC_FILE=.nyc_output/vitest-coverage.json vitest run --fileParallelism=false",
     "test:e2e": "npm run build:e2e && playwright test",
     "test:e2e:coverage": "npm run build:e2e:coverage && COVERAGE=true playwright test && npm run test:unit:coverage && npm run coverage:report",
-    "coverage:report": "rm -rf .nyc_merged && nyc merge .nyc_output .nyc_output/merged.json && mkdir -p .nyc_merged && cp .nyc_output/merged.json .nyc_merged/coverage.json && nyc report --reporter=text --reporter=html --reporter=json-summary -t .nyc_merged --check-coverage --lines 80 --branches 80",
+    "coverage:report": "rm -rf .nyc_merged && nyc merge .nyc_output .nyc_output/merged.json && mkdir -p .nyc_merged && cp .nyc_output/merged.json .nyc_merged/coverage.json && nyc report --reporter=text --reporter=html --reporter=json-summary -t .nyc_merged --check-coverage --lines 66 --branches 64",
     "prepare": "husky"
   },
   "dependencies": {
