@@ -794,15 +794,37 @@ function leadsHandlers() {
       }
       return json(paginated([]));
     }),
-    http.get(`${API_BASE_URL}/audit-events/`, ({ request }) => {
+    http.get(`${API_BASE_URL}/leads/:id/audit-events/`, ({ request, params }) => {
       const unauthorized = ensureAuth(request);
       if (unauthorized) {
         return unauthorized;
       }
-      // Neither loan_officer nor branch_manager holds view_audit (ADR-0009)
-      // -- getLeadAuditEvents() treats a 403 here as "no timeline", not a
-      // page error.
-      return json({ detail: 'Forbidden.' }, { status: 403 });
+      // Lead-scoped timeline is gated on view_leads, not the global
+      // view_audit permission, so any role that can open the lead (loan
+      // officer, branch manager) can see its history.
+      return json(
+        paginated([
+          {
+            id: 'audit-1',
+            actor_user: null,
+            actor_user_name: 'Mbazira Alfred',
+            actor_role: 'loan_officer',
+            entity_type: 'lead',
+            entity_id: params.id,
+            entity_label: null,
+            subject: `lead:${params.id}`,
+            action: 'lead.decline_recommended',
+            from_state: 'review',
+            to_state: 'decline_recommended',
+            reason: 'Insufficient collateral documentation.',
+            payload: {},
+            occurred_at: '2026-07-09T10:00:00Z',
+            source_surface: 'dashboard',
+            ip_address: null,
+            device_label: null,
+          },
+        ]),
+      );
     }),
     http.get(`${API_BASE_URL}/branches/`, ({ request }) => {
       const unauthorized = ensureAuth(request);

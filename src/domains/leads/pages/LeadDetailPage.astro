@@ -604,9 +604,7 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
           {activeTab === 'timeline' && (
             <div class="p-5">
               {auditEvents.length === 0 ? (
-                <p class="text-sm text-ink-400">
-                  No event history available — this view requires audit-log access.
-                </p>
+                <p class="text-sm text-ink-400">No event history available for this lead.</p>
               ) : (
                 <div class="space-y-4">
                   {auditEvents.map((event) => (

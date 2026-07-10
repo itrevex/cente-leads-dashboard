@@ -47,6 +47,13 @@ test('My Leads defaults to branch scope, then tiered recommend/decline (ADR-0034
   await expect(page.getByRole('button', { name: 'Recommend', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Decline', exact: true })).toBeVisible();
 
+  // Lifecycle Timeline must be visible to Branch Manager (lead-scoped,
+  // gated on view_leads) -- previously 403'd via the global view_audit
+  // endpoint, silently showing "No event history available".
+  await page.getByRole('link', { name: 'Timeline' }).click();
+  await expect(page.getByText('Insufficient collateral documentation.').first()).toBeVisible();
+  await expect(page.getByText('No event history available')).toHaveCount(0);
+
   await page.getByRole('button', { name: 'Decline', exact: true }).click();
   await page.getByLabel(/Reason for declining/i).fill('Confirmed inconsistent documents.');
   await page.getByRole('button', { name: /Confirm Decline/i }).click();

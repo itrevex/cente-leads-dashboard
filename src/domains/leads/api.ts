@@ -172,25 +172,17 @@ export async function getGpsPins(accessToken: string, leadId: string): Promise<L
   return page.results;
 }
 
-// Gated on view_audit (ADR-0009) — most lead-owning roles (branch
-// officer/manager, loan officer) don't have it, so a 403 here is
-// expected and the caller should just omit the timeline, not treat it
-// as a page-level error.
+// Lead-scoped Lifecycle Timeline, gated on view_leads (same as the lead
+// itself) rather than the global view_audit permission — any role that
+// can open this lead can see its history.
 export async function getLeadAuditEvents(
   accessToken: string,
   leadId: string,
 ): Promise<AuditEvent[]> {
-  try {
-    const page = await request<PaginatedResponse<AuditEvent>>(
-      `/audit-events/?entity_type=lead&entity_id=${leadId}&limit=100`,
-      { method: 'GET' },
-      accessToken,
-    );
-    return page.results;
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 403) {
-      return [];
-    }
-    throw err;
-  }
+  const page = await request<PaginatedResponse<AuditEvent>>(
+    `/leads/${leadId}/audit-events/`,
+    { method: 'GET' },
+    accessToken,
+  );
+  return page.results;
 }
