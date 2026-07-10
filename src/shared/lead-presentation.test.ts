@@ -9,8 +9,8 @@ import {
 } from './lead-presentation';
 
 describe('lead-presentation helpers', () => {
-  it('formats UGX values from minor units', () => {
-    expect(formatUgx(123456700)).toBe('UGX 1,234,567');
+  it('formats whole-UGX amounts with no unit conversion (ADR-0035)', () => {
+    expect(formatUgx(1234567)).toBe('UGX 1,234,567');
   });
 
   it('subtracts recommended and declined counts from the active pipeline total', () => {

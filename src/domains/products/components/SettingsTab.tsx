@@ -18,8 +18,8 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
     code: product.code,
     segment: product.segment,
     description: product.description,
-    min_amount: product.min_amount / 100,
-    max_amount: product.max_amount / 100,
+    min_amount: product.min_amount,
+    max_amount: product.max_amount,
     interest_rate_bps: product.interest_rate_bps,
     processing_fee_bps: product.processing_fee_bps,
     min_term_months: product.min_term_months,
@@ -40,8 +40,6 @@ export default function SettingsTab({ product, branchOptions, canManage, onSaved
     try {
       const updated = await updateProduct(product.id, {
         ...form,
-        min_amount: Math.round(form.min_amount * 100),
-        max_amount: Math.round(form.max_amount * 100),
         branch_availability: branches,
       });
       onSaved(updated);

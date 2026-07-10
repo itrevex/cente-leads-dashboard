@@ -30,7 +30,7 @@ test('My Leads defaults to branch scope, then tiered recommend/decline (ADR-0034
   await page.getByRole('button', { name: 'Recommend Decline' }).click();
   await page.getByLabel(/Reason for recommending decline/i).fill('Inconsistent income docs.');
   await page.getByRole('button', { name: /Confirm Recommend Decline/i }).click();
-  await expect(page.getByText('Decline Recommended')).toBeVisible();
+  await expect(page.getByText('Decline Recommended', { exact: true })).toBeVisible();
 
   // Loan Officer's action set is now Recommend-only (the lead is no longer
   // in `review`, and they don't hold decline_leads to finalize it).
@@ -49,7 +49,7 @@ test('My Leads defaults to branch scope, then tiered recommend/decline (ADR-0034
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/leads/mine');
   await page.getByText('Andrew Kwesiga').click();
-  await expect(page.getByText('Decline Recommended')).toBeVisible();
+  await expect(page.getByText('Decline Recommended', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Recommend', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Decline', exact: true })).toBeVisible();
 

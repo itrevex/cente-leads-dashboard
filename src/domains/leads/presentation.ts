@@ -34,6 +34,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   'lead.returned': 'Returned to agent',
   'lead.reopened': 'Reopened by agent',
   'lead.recommended': 'Recommended for appraisal',
+  'lead.decline_recommended': 'Decline recommended',
   'lead.declined': 'Declined',
   'lead.reassigned': 'Reassigned',
 };

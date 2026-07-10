@@ -56,8 +56,6 @@ export default function ProductsListPage({ initialProducts, canManage }: Props) 
     try {
       const product = await createProduct({
         ...form,
-        min_amount: Math.round(form.min_amount * 100),
-        max_amount: Math.round(form.max_amount * 100),
         currency: 'UGX',
       });
       setProducts((prev) => [...prev, product]);

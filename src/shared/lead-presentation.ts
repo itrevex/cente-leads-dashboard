@@ -17,10 +17,9 @@ export const STATUS_META: Record<
   declined: { label: 'Declined', color: 'red' },
 };
 
-// amount_requested arrives from the API in minor units (cents per
-// apps.leads.models.Lead.amount_requested) — divide by 100 for display.
-export function formatUgx(minorUnits: number): string {
-  return `UGX ${Math.round(minorUnits / 100).toLocaleString('en-US')}`;
+// Amounts are whole UGX end-to-end (ADR-0035) — no cents, no conversion.
+export function formatUgx(amount: number): string {
+  return `UGX ${Math.round(amount).toLocaleString('en-US')}`;
 }
 
 // Mirrors apps.leads.models.LeadStatus.terminal_states() — a lead that's
