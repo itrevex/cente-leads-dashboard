@@ -106,7 +106,7 @@ export function getAgentOptions(accessToken: string): Promise<AgentOption[]> {
 // roles can ever be set as Lead.reviewing_officer. /users/ only filters
 // by a single role per request, so fetch each in parallel and merge.
 export async function getReviewingOfficerOptions(accessToken: string): Promise<AgentOption[]> {
-  const roles = ['branch_officer', 'loan_officer', 'head_of_loans'];
+  const roles = ['loan_officer', 'head_of_loans'];
   const pages = await Promise.all(
     roles.map((role) =>
       resultsOrEmptyIfForbidden(

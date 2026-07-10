@@ -12,6 +12,7 @@ export const STATUS_META: Record<
   review: { label: 'Bank Reviewing', color: 'blue' },
   info_requested: { label: 'Info Requested', color: 'yellow' },
   returned: { label: 'Returned to Agent', color: 'yellow' },
+  decline_recommended: { label: 'Decline Recommended', color: 'yellow' },
   recommended: { label: 'Recommended', color: 'green' },
   declined: { label: 'Declined', color: 'red' },
 };

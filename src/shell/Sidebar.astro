@@ -20,9 +20,9 @@ const navIds = new Set(sections.flatMap((section) => section.items.map((item) =>
 
 if (navIds.has('leads') || navIds.has('queue-mine')) {
   try {
-    const myLeadsFilter = user.can_be_reviewing_officer
-      ? { reviewing_officer: user.id }
-      : { branch: user.branch ?? undefined };
+    // Matches LeadsListPage's default "My Leads" scope: every workable
+    // (branch) lead, not just leads already assigned via reviewing_officer.
+    const myLeadsFilter = { branch: user.branch ?? undefined };
     const [allCounts, mineCounts] = await Promise.all([
       navIds.has('leads') ? getStatusCounts(accessToken) : Promise.resolve(null),
       navIds.has('queue-mine')

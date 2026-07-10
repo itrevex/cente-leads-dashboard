@@ -98,18 +98,22 @@ const statusMeta = lead
   ? (STATUS_META[lead.status] ?? { label: lead.status, color: 'neutral' })
   : null;
 
-// Mirrors apps.leads.views.LeadRequestInfoView/LeadRecommendView/
-// LeadDeclineView/LeadReturnToAgentView allowed_roles — only loan officers
-// and the head of loans may act on a lead under bank review.
+// Permission-gated per ADR-0034 (mirrors apps.leads.views' required_permission
+// on LeadRequestInfoView/LeadRecommendView/LeadRecommendDeclineView/
+// LeadReturnToAgentView/LeadDeclineView) — not a role-literal list, so an
+// admin-created custom role granted these permissions works with no
+// frontend change.
+const canRecommendDecline = !!user && user.permissions.includes('recommend_decline');
+const canFinalizeDecline = !!user && user.permissions.includes('decline_leads');
 const canDecide =
-  !!user && ['loan_officer', 'head_of_loans'].includes(user.role) && lead?.status === 'review';
+  canRecommendDecline && (lead?.status === 'review' || lead?.status === 'decline_recommended');
 
-// Mirrors apps.leads.views.LeadReassignView.allowed_roles (ADR-0020/0021).
+// Mirrors apps.leads.views.LeadReassignView's required_permission (ADR-0034).
 // Available on any non-terminal lead, unlike canDecide which is review-only.
 const TERMINAL_STATUSES = ['recommended', 'declined'];
 const canReassign =
   !!user &&
-  ['head_of_loans', 'compliance_officer', 'mcp_officer', 'system_admin'].includes(user.role) &&
+  user.permissions.includes('reassign_leads') &&
   !!lead &&
   !TERMINAL_STATUSES.includes(lead.status);
 
@@ -199,7 +203,12 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
             <h3 class="mb-3 text-sm font-semibold text-ink-700 dark:text-ink-50">
               Bank Review Decision
             </h3>
-            <LeadDecisionActions leadId={lead.id} client:load />
+            <LeadDecisionActions
+              leadId={lead.id}
+              canFinalizeDecline={canFinalizeDecline}
+              isDeclineRecommended={lead.status === 'decline_recommended'}
+              client:load
+            />
           </div>
         )}
 

@@ -36,16 +36,21 @@ const basePath = myLeads ? '/leads/mine' : '/leads';
 const PAGE_SIZE = 25;
 const page = Math.max(1, parseInt(params.get('page') ?? '1', 10) || 1);
 
-// Not every dashboard role is ever eligible to be Lead.reviewing_officer
-// (apps.accounts.models.UserRole.reviewing_officer_roles, e.g.
-// branch_manager) — for those, "My Leads" means "my branch" instead of
-// "leads I'm reviewing".
-const myLeadsScope: Partial<LeadFilters> =
-  myLeads && user.can_be_reviewing_officer
+// "My Leads" means "leads I can work" (my branch), not just "leads already
+// assigned to me" — a reviewing-officer-eligible role (e.g. loan_officer)
+// should see every workable lead in their branch by default, the same as
+// any other branch-restricted role, and narrow down with the "Assigned to
+// me" checkbox below. Before this, an officer with no leads yet assigned
+// via Lead.reviewing_officer saw an empty page even though they could act
+// on every lead in their branch.
+const assignedToMe =
+  myLeads && user.can_be_reviewing_officer && params.get('assigned_to_me') === '1';
+
+const myLeadsScope: Partial<LeadFilters> = myLeads
+  ? assignedToMe
     ? { reviewing_officer: user.id }
-    : myLeads
-      ? { branch: user.branch ?? undefined }
-      : {};
+    : { branch: user.branch ?? undefined }
+  : {};
 
 const baseFilters: LeadFilters = {
   branch: params.get('branch') ?? undefined,
@@ -300,6 +305,22 @@ const chairpersonFilterName = chairpersonFilterId
                   </option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {myLeads && user.can_be_reviewing_officer && (
+            <div class="flex flex-col gap-1">
+              <span class="text-xs font-medium text-ink-500 dark:text-ink-300">&nbsp;</span>
+              <label class="flex items-center gap-2 rounded-sm border border-ink-200 px-3 py-2 text-sm text-ink-600 dark:border-ink-600 dark:bg-ink-900 dark:text-ink-200">
+                <input
+                  type="checkbox"
+                  id="assigned_to_me"
+                  name="assigned_to_me"
+                  value="1"
+                  checked={assignedToMe}
+                />
+                Assigned to me
+              </label>
             </div>
           )}
 

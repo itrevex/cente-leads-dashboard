@@ -47,6 +47,15 @@ export function declineLead(leadId: string, reason: string): Promise<Lead> {
   });
 }
 
+// DeclineLeadSerializer shape (reason mandatory) — flags a lead as
+// decline_recommended without finalizing it (ADR-0034, loan_officer only).
+export function recommendDecline(leadId: string, reason: string): Promise<Lead> {
+  return call(`/api/leads/${leadId}/recommend-decline/`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
 // ReturnToAgentSerializer: reasons (non-empty list, no fixed backend
 // vocabulary — free text per reason), note (optional).
 export function returnToAgent(leadId: string, reasons: string[], note?: string): Promise<Lead> {

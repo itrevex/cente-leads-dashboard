@@ -7,6 +7,7 @@ export const TEMPLATE_LABELS: Record<string, string> = {
   'lead.info_requested': 'Information requested',
   'lead.info_provided': 'Information provided',
   'lead.returned': 'Returned to agent',
+  'lead.decline_recommended': 'Recommended for decline',
   'lead.recommended': 'Recommended for appraisal',
   'lead.declined': 'Declined',
 };

@@ -9,6 +9,7 @@ export const STATUS_BUCKETS = [
   { value: 'review', label: 'Bank Reviewing' },
   { value: 'info_requested', label: 'Info Requested' },
   { value: 'returned', label: 'Returned to Agent' },
+  { value: 'decline_recommended', label: 'Decline Recommended' },
   { value: 'recommended', label: 'Recommended' },
   { value: 'declined', label: 'Declined' },
 ] as const;

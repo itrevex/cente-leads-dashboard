@@ -1,12 +1,31 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { requestInfo, recommendLead, declineLead, returnToAgent, LeadsApiError } from '../client';
+import {
+  requestInfo,
+  recommendLead,
+  recommendDecline,
+  declineLead,
+  returnToAgent,
+  LeadsApiError,
+} from '../client';
 
 interface Props {
   leadId: string;
+  // Only branch_manager/head_of_loans hold decline_leads (ADR-0034) — loan
+  // officers see "Recommend Decline" (a flag) instead of "Decline" (final).
+  canFinalizeDecline: boolean;
+  // Request Info / Return to Agent only apply to a lead still in `review`;
+  // once a loan officer has flagged decline_recommended, only Recommend
+  // (overrule) or Decline (finalize) make sense.
+  isDeclineRecommended: boolean;
 }
 
-type ActionKind = 'request_info' | 'recommend' | 'decline' | 'return_to_agent';
+type ActionKind =
+  | 'request_info'
+  | 'recommend'
+  | 'recommend_decline'
+  | 'decline'
+  | 'return_to_agent';
 
 const ACTION_META: Record<
   ActionKind,
@@ -27,6 +46,13 @@ const ACTION_META: Record<
     required: false,
     buttonClass: 'bg-success text-white hover:opacity-90',
   },
+  recommend_decline: {
+    label: 'Recommend Decline',
+    title: 'Flag this lead for decline',
+    fieldLabel: 'Reason for recommending decline',
+    required: true,
+    buttonClass: 'bg-cente-red-600 text-white hover:bg-cente-red-700',
+  },
   decline: {
     label: 'Decline',
     title: 'Decline this lead',
@@ -44,7 +70,19 @@ const ACTION_META: Record<
   },
 };
 
-export default function LeadDecisionActions({ leadId }: Props) {
+export default function LeadDecisionActions({
+  leadId,
+  canFinalizeDecline,
+  isDeclineRecommended,
+}: Props) {
+  const visibleActions: ActionKind[] = isDeclineRecommended
+    ? canFinalizeDecline
+      ? ['recommend', 'decline']
+      : ['recommend']
+    : canFinalizeDecline
+      ? ['request_info', 'recommend', 'decline', 'return_to_agent']
+      : ['request_info', 'recommend', 'recommend_decline', 'return_to_agent'];
+
   const [open, setOpen] = useState<ActionKind | null>(null);
   const [text, setText] = useState('');
   const [reasons, setReasons] = useState<string[]>([]);
@@ -95,6 +133,8 @@ export default function LeadDecisionActions({ leadId }: Props) {
         await requestInfo(leadId, text);
       } else if (open === 'recommend') {
         await recommendLead(leadId, text);
+      } else if (open === 'recommend_decline') {
+        await recommendDecline(leadId, text);
       } else if (open === 'decline') {
         await declineLead(leadId, text);
       } else {
@@ -122,7 +162,7 @@ export default function LeadDecisionActions({ leadId }: Props) {
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {(Object.keys(ACTION_META) as ActionKind[]).map((kind) => (
+        {visibleActions.map((kind) => (
           <button
             key={kind}
             type="button"

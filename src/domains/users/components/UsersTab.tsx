@@ -312,7 +312,7 @@ export default function UsersTab({ initialUsers, roles, branchOptions, canManage
                   />
                 </td>
                 <td className="px-2 py-3 text-ink-500 dark:text-ink-300">
-                  {formatLastActivity(u.last_login)}
+                  {formatLastActivity(u.last_active_at)}
                 </td>
                 {canManage && (
                   <td className="px-5 py-3 text-right">
