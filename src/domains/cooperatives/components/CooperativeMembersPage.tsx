@@ -79,10 +79,74 @@ export default function CooperativeMembersPage({ cooperative, initialMembers }: 
               </tr>
             </thead>
             <tbody>
-              {members.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-5 py-6 text-center text-ink-400">
-                    No members found.
+              {members.length === 0 &&
+                !cooperative.chairperson_detail &&
+                !cooperative.secretary_detail && (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-6 text-center text-ink-400">
+                      No members found.
+                    </td>
+                  </tr>
+                )}
+              {cooperative.chairperson_detail && (
+                <tr className="border-t border-ink-100 dark:border-ink-700">
+                  <td className="px-5 py-3 font-medium text-ink-700 dark:text-ink-50">
+                    {cooperative.chairperson_detail.full_name}{' '}
+                    <Badge label="Chairperson" color="blue" />
+                  </td>
+                  <td className="px-2 py-3 font-mono text-xs text-ink-400">—</td>
+                  <td className="px-2 py-3 text-sm text-ink-500 dark:text-ink-300">
+                    {cooperative.chairperson_detail.phone}
+                  </td>
+                  <td className="px-2 py-3 text-sm text-ink-500 dark:text-ink-300">—</td>
+                  <td className="px-5 py-3">
+                    <Badge
+                      label={
+                        cooperative.chairperson_detail.leader_approval_status === 'approved'
+                          ? 'Approved'
+                          : cooperative.chairperson_detail.leader_approval_status === 'pending'
+                            ? 'Pending'
+                            : 'Rejected'
+                      }
+                      color={
+                        cooperative.chairperson_detail.leader_approval_status === 'approved'
+                          ? 'green'
+                          : cooperative.chairperson_detail.leader_approval_status === 'pending'
+                            ? 'neutral'
+                            : 'red'
+                      }
+                    />
+                  </td>
+                </tr>
+              )}
+              {cooperative.secretary_detail && (
+                <tr className="border-t border-ink-100 dark:border-ink-700">
+                  <td className="px-5 py-3 font-medium text-ink-700 dark:text-ink-50">
+                    {cooperative.secretary_detail.full_name}{' '}
+                    <Badge label="Secretary" color="blue" />
+                  </td>
+                  <td className="px-2 py-3 font-mono text-xs text-ink-400">—</td>
+                  <td className="px-2 py-3 text-sm text-ink-500 dark:text-ink-300">
+                    {cooperative.secretary_detail.phone}
+                  </td>
+                  <td className="px-2 py-3 text-sm text-ink-500 dark:text-ink-300">—</td>
+                  <td className="px-5 py-3">
+                    <Badge
+                      label={
+                        cooperative.secretary_detail.leader_approval_status === 'approved'
+                          ? 'Approved'
+                          : cooperative.secretary_detail.leader_approval_status === 'pending'
+                            ? 'Pending'
+                            : 'Rejected'
+                      }
+                      color={
+                        cooperative.secretary_detail.leader_approval_status === 'approved'
+                          ? 'green'
+                          : cooperative.secretary_detail.leader_approval_status === 'pending'
+                            ? 'neutral'
+                            : 'red'
+                      }
+                    />
                   </td>
                 </tr>
               )}
