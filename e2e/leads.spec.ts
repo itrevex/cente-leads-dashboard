@@ -21,6 +21,12 @@ test('My Leads defaults to branch scope, then tiered recommend/decline (ADR-0034
   await expect(page.getByRole('button', { name: 'Recommend Decline' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Decline', exact: true })).toHaveCount(0);
 
+  // Chair Approval card shows the agent, linked to that agent's leads --
+  // same clickable treatment as the chairperson link.
+  const agentLink = page.getByRole('link', { name: 'Demo Agent' });
+  await expect(agentLink).toBeVisible();
+  await expect(agentLink).toHaveAttribute('href', '/leads?assigned_agent=user-agent-001');
+
   await page.getByRole('button', { name: 'Recommend Decline' }).click();
   await page.getByLabel(/Reason for recommending decline/i).fill('Inconsistent income docs.');
   await page.getByRole('button', { name: /Confirm Recommend Decline/i }).click();

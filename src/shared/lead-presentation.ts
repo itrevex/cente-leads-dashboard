@@ -47,6 +47,12 @@ export function chairpersonPendingReviewHref(chairpersonId: string): string {
   return `/leads?chairperson=${chairpersonId}&status=chair_pending`;
 }
 
+// Links an agent's name (e.g. on the Chair Approval card) to the leads
+// list scoped to everything that agent has captured.
+export function agentLeadsHref(agentId: string): string {
+  return `/leads?assigned_agent=${agentId}`;
+}
+
 // Removes the chairperson query param (and resets pagination, since the
 // result set is about to change) while preserving every other active
 // filter — used by the leads list page's "Clear" affordance on the

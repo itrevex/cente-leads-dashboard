@@ -766,12 +766,28 @@ function leadsHandlers() {
       }
       return json(makeSchema({ id: params.id }));
     }),
-    http.get(`${API_BASE_URL}/leads/:id/chair-approvals/`, ({ request }) => {
+    http.get(`${API_BASE_URL}/leads/:id/chair-approvals/`, ({ request, params }) => {
       const unauthorized = ensureAuth(request);
       if (unauthorized) {
         return unauthorized;
       }
-      return json(paginated([]));
+      if (params.id !== 'lead-001') {
+        return json(paginated([]));
+      }
+      return json(
+        paginated([
+          {
+            id: 'chair-approval-1',
+            lead: params.id,
+            chairperson: 'user-chair-001',
+            chairperson_name: 'Demo Chairperson',
+            decision: 'endorsed',
+            note: '',
+            signed_at: '2026-07-08T09:30:00Z',
+            created_at: '2026-07-08T09:30:00Z',
+          },
+        ]),
+      );
     }),
     http.get(`${API_BASE_URL}/leads/:id/comments/`, ({ request }) => {
       const unauthorized = ensureAuth(request);

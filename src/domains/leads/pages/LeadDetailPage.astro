@@ -20,7 +20,7 @@ import {
   DOC_TYPE_LABELS,
   UPLOAD_STATUS_META,
 } from '../presentation';
-import { chairpersonPendingReviewHref } from '../../../shared/lead-presentation';
+import { agentLeadsHref, chairpersonPendingReviewHref } from '../../../shared/lead-presentation';
 import Badge from '../../../shared/components/Badge';
 import Avatar from '../../../shared/components/Avatar';
 import LeadDecisionActions from '../components/LeadDecisionActions';
@@ -292,7 +292,33 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
                       {latestChairApproval.decision === 'endorsed' ? 'Signed by' : 'Rejected by'}
                     </dt>
                     <dd class="text-right text-ink-700 dark:text-ink-50">
-                      {latestChairApproval.chairperson_name}
+                      {lead.chairperson_detail ? (
+                        <a
+                          href={chairpersonPendingReviewHref(lead.chairperson_detail.id)}
+                          class="text-cente-blue-600 underline hover:text-cente-blue-700"
+                          title="View leads pending this chairperson's review"
+                        >
+                          {latestChairApproval.chairperson_name}
+                        </a>
+                      ) : (
+                        latestChairApproval.chairperson_name
+                      )}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-ink-400">Agent</dt>
+                    <dd class="text-right text-ink-700 dark:text-ink-50">
+                      {lead.assigned_agent && lead.assigned_agent_name ? (
+                        <a
+                          href={agentLeadsHref(lead.assigned_agent)}
+                          class="text-cente-blue-600 underline hover:text-cente-blue-700"
+                          title="View leads captured by this agent"
+                        >
+                          {lead.assigned_agent_name}
+                        </a>
+                      ) : (
+                        (lead.assigned_agent_name ?? 'Branch walk-in')
+                      )}
                     </dd>
                   </div>
                   <div class="flex justify-between gap-3">
@@ -577,23 +603,25 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
               {comments.length === 0 ? (
                 <p class="text-sm text-ink-400">No comments yet.</p>
               ) : (
-                comments.map((comment) => (
-                  <div class="flex gap-3">
-                    <Avatar initials={initialsOf(comment.author_name)} />
-                    <div class="flex-1 rounded-sm bg-ink-50 px-4 py-3 dark:bg-ink-900">
-                      <div class="flex items-center justify-between gap-2">
-                        <strong class="text-sm text-ink-700 dark:text-ink-50">
-                          {comment.author_name}
-                        </strong>
-                        <span class="text-xs text-ink-400">
-                          {comment.created_at.slice(0, 16).replace('T', ' ')}
-                          {comment.is_internal && ' · Internal'}
-                        </span>
+                <div class="mt-2 space-y-4">
+                  {comments.map((comment) => (
+                    <div class="flex gap-3">
+                      <Avatar initials={initialsOf(comment.author_name)} />
+                      <div class="flex-1 rounded-sm bg-ink-50 px-4 py-3 dark:bg-ink-900">
+                        <div class="flex items-center justify-between gap-2">
+                          <strong class="text-sm text-ink-700 dark:text-ink-50">
+                            {comment.author_name}
+                          </strong>
+                          <span class="text-xs text-ink-400">
+                            {comment.created_at.slice(0, 16).replace('T', ' ')}
+                            {comment.is_internal && ' · Internal'}
+                          </span>
+                        </div>
+                        <p class="mt-1 text-sm text-ink-600 dark:text-ink-200">{comment.body}</p>
                       </div>
-                      <p class="mt-1 text-sm text-ink-600 dark:text-ink-200">{comment.body}</p>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
               <p class="text-xs text-ink-400">
                 {internalComments.length} internal · {externalComments.length} external
