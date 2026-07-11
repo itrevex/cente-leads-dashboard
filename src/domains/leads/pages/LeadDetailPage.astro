@@ -98,15 +98,22 @@ const statusMeta = lead
   ? (STATUS_META[lead.status] ?? { label: lead.status, color: 'neutral' })
   : null;
 
-// Permission-gated per ADR-0034 (mirrors apps.leads.views' required_permission
-// on LeadRequestInfoView/LeadRecommendView/LeadRecommendDeclineView/
-// LeadReturnToAgentView/LeadDeclineView) — not a role-literal list, so an
-// admin-created custom role granted these permissions works with no
-// frontend change.
-const canRecommendDecline = !!user && user.permissions.includes('recommend_decline');
+// Permission-gated per ADR-0034/0010_split_recommend_decline_permissions
+// (mirrors apps.leads.views' required_permission on LeadRequestInfoView/
+// LeadRecommendView/LeadRecommendDeclineView/LeadReturnToAgentView/
+// LeadDeclineView) — not a role-literal list, so an admin-created custom
+// role granted these permissions works with no frontend change. Each
+// review-stage action now has its own independent permission, rather than
+// being bundled under one shared 'recommend_decline' grant.
+const canRequestInfo = !!user && user.permissions.includes('request_info_leads');
+const canRecommend = !!user && user.permissions.includes('recommend_leads');
+const canFlagDecline = !!user && user.permissions.includes('flag_decline_leads');
+const canReturnToAgent = !!user && user.permissions.includes('return_to_agent_leads');
 const canFinalizeDecline = !!user && user.permissions.includes('decline_leads');
+const canActOnLeadUnderReview =
+  canRequestInfo || canRecommend || canFlagDecline || canReturnToAgent || canFinalizeDecline;
 const canDecide =
-  canRecommendDecline && (lead?.status === 'review' || lead?.status === 'decline_recommended');
+  canActOnLeadUnderReview && (lead?.status === 'review' || lead?.status === 'decline_recommended');
 
 // Mirrors apps.leads.views.LeadReassignView's required_permission (ADR-0034).
 // Available on any non-terminal lead, unlike canDecide which is review-only.
@@ -205,6 +212,10 @@ const backLabel = backHref === '/leads' ? 'Back to Leads' : 'Back to My Leads';
             </h3>
             <LeadDecisionActions
               leadId={lead.id}
+              canRequestInfo={canRequestInfo}
+              canRecommend={canRecommend}
+              canFlagDecline={canFlagDecline}
+              canReturnToAgent={canReturnToAgent}
               canFinalizeDecline={canFinalizeDecline}
               isDeclineRecommended={lead.status === 'decline_recommended'}
               client:load

@@ -18,9 +18,13 @@ export type UserStatus = 'active' | 'disabled';
 // union only documents the keys frontend code currently branches on.
 export type PermissionKey =
   | 'view_leads'
-  | 'approve_leads'
+  | 'recommend_leads'
   | 'approve_leaders'
-  | 'recommend_decline'
+  | 'flag_decline_leads'
+  | 'request_info_leads'
+  | 'return_to_agent_leads'
+  | 'decline_leads'
+  | 'reassign_leads'
   | 'view_reports'
   | 'export_data'
   | 'manage_users'

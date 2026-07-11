@@ -11,8 +11,10 @@ export const systemAdminUser = {
   last_active_at: '2026-07-08T09:00:00Z',
   permissions: [
     'view_leads',
-    'approve_leads',
-    'recommend_decline',
+    'recommend_leads',
+    'flag_decline_leads',
+    'request_info_leads',
+    'return_to_agent_leads',
     'decline_leads',
     'reassign_leads',
     'view_reports',
@@ -32,7 +34,8 @@ export const systemAdminUser = {
   can_be_reviewing_officer: true,
 };
 
-// ADR-0034: can Recommend and "Recommend Decline" (flag only), not Decline.
+// 0010_split_recommend_decline_permissions: can Recommend, Request Info,
+// Return to Agent, and "Recommend Decline" (flag only), not finalize Decline.
 // last_active_at is computed relative to "now" (not a fixed date) so
 // formatLastActivity() always renders a stable, assertable "N minutes ago"
 // regardless of when the test suite runs.
@@ -47,11 +50,20 @@ export const loanOfficerUser = {
   status: 'active',
   last_login: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
   last_active_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-  permissions: ['view_leads', 'recommend_decline', 'view_reports', 'view_products'],
+  permissions: [
+    'view_leads',
+    'recommend_leads',
+    'flag_decline_leads',
+    'request_info_leads',
+    'return_to_agent_leads',
+    'view_reports',
+    'view_products',
+  ],
   can_be_reviewing_officer: true,
 };
 
-// ADR-0034: can Recommend and Decline directly (final), and Reassign.
+// 0010_split_recommend_decline_permissions: can Recommend and Decline
+// directly (final), and Reassign.
 export const branchManagerUser = {
   id: 'user-branch-manager',
   email: 'branch.manager@cente.test',
@@ -65,7 +77,10 @@ export const branchManagerUser = {
   last_active_at: null,
   permissions: [
     'view_leads',
-    'recommend_decline',
+    'recommend_leads',
+    'flag_decline_leads',
+    'request_info_leads',
+    'return_to_agent_leads',
     'decline_leads',
     'view_reports',
     'view_agents',

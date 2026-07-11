@@ -11,8 +11,17 @@ import {
 
 interface Props {
   leadId: string;
-  // Only branch_manager/head_of_loans hold decline_leads (ADR-0034) — loan
-  // officers see "Recommend Decline" (a flag) instead of "Decline" (final).
+  // Each review-stage action is gated by its own independent permission
+  // (0010_split_recommend_decline_permissions) — a role may hold any subset
+  // of these, so the visible action set is no longer inferable from a
+  // single shared flag.
+  canRequestInfo: boolean;
+  canRecommend: boolean;
+  canFlagDecline: boolean;
+  canReturnToAgent: boolean;
+  // Only whichever roles hold decline_leads can finalize (ADR-0034) — a
+  // role with canFlagDecline but not canFinalizeDecline sees "Recommend
+  // Decline" (a flag) instead of "Decline" (final).
   canFinalizeDecline: boolean;
   // Request Info / Return to Agent only apply to a lead still in `review`;
   // once a loan officer has flagged decline_recommended, only Recommend
@@ -72,16 +81,20 @@ const ACTION_META: Record<
 
 export default function LeadDecisionActions({
   leadId,
+  canRequestInfo,
+  canRecommend,
+  canFlagDecline,
+  canReturnToAgent,
   canFinalizeDecline,
   isDeclineRecommended,
 }: Props) {
-  const visibleActions: ActionKind[] = isDeclineRecommended
-    ? canFinalizeDecline
-      ? ['recommend', 'decline']
-      : ['recommend']
-    : canFinalizeDecline
-      ? ['request_info', 'recommend', 'decline', 'return_to_agent']
-      : ['request_info', 'recommend', 'recommend_decline', 'return_to_agent'];
+  const visibleActions: ActionKind[] = [
+    ...(!isDeclineRecommended && canRequestInfo ? (['request_info'] as const) : []),
+    ...(canRecommend ? (['recommend'] as const) : []),
+    ...(!isDeclineRecommended && canFlagDecline ? (['recommend_decline'] as const) : []),
+    ...(canFinalizeDecline ? (['decline'] as const) : []),
+    ...(!isDeclineRecommended && canReturnToAgent ? (['return_to_agent'] as const) : []),
+  ];
 
   const [open, setOpen] = useState<ActionKind | null>(null);
   const [text, setText] = useState('');
